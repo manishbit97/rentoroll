@@ -9,6 +9,8 @@ import { ThemedView } from "@/components/ThemedView";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Link, useLocalSearchParams } from "expo-router";
 import FlatsList from "@/components/apartments/flatsList";
+import { BackIcon } from "@/components/navigation/BackIcon";
+import ThemedHeader from "@/components/header";
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -25,20 +27,13 @@ export default function HomeScreen() {
           paddingLeft: insets.left,
         }}
       >
-        <ThemedView style={styles.titleContainer}>
-          <Link href="/" style={styles.homeicon}>
-            {" "}
-            <TabBarIcon
-              name="home"
-              size={32}
-              color={colorScheme === "dark" ? "white" : "black"}
-              style={styles.homeicon}
-            />
-          </Link>
+        {/* <ThemedView style={styles.headerContainer}>
+          <BackIcon />
           <ThemedText type="title" style={styles.title}>
             RentoRoll
           </ThemedText>
-        </ThemedView>
+        </ThemedView> */}
+        <ThemedHeader headerTitle={"Flats List"} />
         <ThemedText type="subtitle" id="apartmenttitle" style={styles.subtitle}>
           {slug} Overview{" "}
         </ThemedText>
@@ -52,23 +47,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  titleContainer: {
+  headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginBottom: 16,
+  },
+  backContainer: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: "auto",
   },
   homeicon: {
     marginTop: 0,
     paddingLeft: 16,
   },
   title: {
-    paddingTop: 10,
-    paddingLeft: 40,
+    paddingTop: 15,
+    paddingLeft: 62,
   },
   subtitle: {
-    paddingTop: 10,
-    paddingLeft: 16,
+    padding: 10,
     display: "flex",
     justifyContent: "center",
   },
