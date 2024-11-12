@@ -268,6 +268,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingHorizontal: 16,
     paddingBottom: 12,
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: "auto",
     // borderBottomWidth: 1,
   },
   searchIcon: {

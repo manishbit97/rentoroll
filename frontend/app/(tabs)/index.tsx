@@ -52,11 +52,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   homeicon: {
-    marginTop: 0,
+    marginTop: 5,
     paddingLeft: 16,
   },
   title: {
     paddingTop: 10,
-    paddingLeft: 40,
+    paddingLeft: 0,
   },
 });
