@@ -6,15 +6,11 @@ import {
 } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { TabBarIcon } from "@/components/navigation/TabBarIcon";
-import { Link, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import FlatsList from "@/components/apartments/flatsList";
-import { BackIcon } from "@/components/navigation/BackIcon";
 import ThemedHeader from "@/components/header";
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const insets = useSafeAreaInsets();
   const { slug } = useLocalSearchParams();
 
   return (
@@ -22,17 +18,11 @@ export default function HomeScreen() {
       <ThemedView
         style={{
           ...styles.container,
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-          paddingLeft: insets.left,
+          // paddingTop: insets.top,
+          // paddingBottom: insets.bottom,
+          // paddingLeft: insets.left,
         }}
       >
-        {/* <ThemedView style={styles.headerContainer}>
-          <BackIcon />
-          <ThemedText type="title" style={styles.title}>
-            RentoRoll
-          </ThemedText>
-        </ThemedView> */}
         <ThemedHeader headerTitle={"Flats List"} />
         <ThemedText type="subtitle" id="apartmenttitle" style={styles.subtitle}>
           {slug} Overview{" "}

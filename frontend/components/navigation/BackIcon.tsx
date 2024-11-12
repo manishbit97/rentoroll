@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
   touchable: {
     width: 40,

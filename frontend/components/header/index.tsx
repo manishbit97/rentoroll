@@ -12,7 +12,7 @@ export default function ThemedHeader({ headerTitle }: any) {
       style={{
         ...styles.headerContainer,
         paddingTop: insets.top || 16,
-        paddingBottom: insets.bottom || 16,
+        paddingBottom: 16,
         paddingLeft: insets.left || 16,
         paddingRight: insets.right || 16,
         gap: 8,
@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#fff",
   },
   backContainer: {
     flexGrow: 0,

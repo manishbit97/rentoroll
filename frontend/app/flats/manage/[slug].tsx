@@ -1,8 +1,5 @@
-import { ScrollView, StyleSheet } from "react-native";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import ThemedButton from "@/components/button";
 import ThemedHeader from "@/components/header";
@@ -13,7 +10,6 @@ import ManageFlatFields from "@/components/manageflats/flatfields";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
   const { slug } = useLocalSearchParams();
 
   return (

@@ -250,7 +250,7 @@ export default function FlatsList() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 24,
+    paddingBottom: 0,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
