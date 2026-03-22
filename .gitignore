@@ -11,3 +11,5 @@ frontend/*.mobileprovision
 frontend/*.orig.*
 frontend/web-build/
 .DS_Store
+backend-nest/dist/
+backend-nest/node_modules/

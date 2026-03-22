@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:9091/health)",
+      "Bash(curl -s --max-time 3 http://127.0.0.1:9091/health)",
+      "Bash(PORT=9091 MONGODB_URI=mongodb://localhost:27017 DATABASE=rentoroll JWT_SECRET=test-secret timeout 8 /tmp/rentoroll-bin)",
+      "Bash(1 sleep:*)",
+      "Bash(curl* *localhost*)",
+      "Bash(docker compose*)",
+      "Bash(mongosh rentoroll:*)",
+      "Bash(docker exec rentoroll-mongo mongosh rentoroll --quiet --eval ':*)",
+      "Bash(npx tsc:*)",
+      "Bash(*)"
+    ]
+  }
+}

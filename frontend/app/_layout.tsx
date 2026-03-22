@@ -1,40 +1,66 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import "@/global.css";
+import { PortalHost } from "@rn-primitives/portal";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack, router } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect, useState } from "react";
+import "react-native-reanimated";
+import { Toaster } from "sonner-native";
 
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { getAuthState } from "@/services/auth";
+import { User } from "@/services/api";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  const [user, setUser] = useState<User | null | undefined>(undefined);
 
+  // Step 1: load auth state (doesn't navigate yet)
   useEffect(() => {
-    if (loaded) {
+    if (!loaded) return;
+    getAuthState().then(({ user }) => {
+      setUser(user);
       SplashScreen.hideAsync();
-    }
+    });
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  // Step 2: navigate only after the Stack has rendered (user !== undefined)
+  useEffect(() => {
+    if (user === undefined) return;
+    redirectByRole(user);
+  }, [user]);
+
+  if (!loaded) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="apartments/[slug]" options={{ headerShown: false }} />
-        <Stack.Screen name="flats/manage/[slug]" options={{ headerShown: false }} />
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(landlord)" />
+        <Stack.Screen name="(tenant)" />
+        <Stack.Screen name="property/[id]" />
+        <Stack.Screen name="rent/[roomId]" />
+        <Stack.Screen name="rent/history/[roomId]" />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <Toaster position="top-center" richColors />
+      <PortalHost />
     </ThemeProvider>
   );
+}
+
+function redirectByRole(user: User | null) {
+  if (!user) {
+    router.replace("/(auth)/login");
+  } else if (user.role === "landlord") {
+    router.replace("/(landlord)");
+  } else {
+    router.replace("/(tenant)");
+  }
 }
