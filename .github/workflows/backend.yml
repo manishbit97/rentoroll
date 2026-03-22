@@ -120,8 +120,9 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose pull backend
 
-            # Restart only backend — MongoDB untouched
-            docker compose up -d --no-deps backend
+            # Start MongoDB + mongo-express if not running (first deploy), then recreate backend only
+            docker compose up -d mongodb mongo-express
+            docker compose up -d --no-deps --force-recreate backend
 
             # Wait up to 60s for health check
             echo "Waiting for health check..."
