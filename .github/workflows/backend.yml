@@ -64,7 +64,46 @@ jobs:
     environment: production
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create deploy directory on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: mkdir -p /opt/rentoroll
+
+      - name: Upload docker-compose.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/opt/rentoroll"
+
+      - name: Write .env.docker from secrets
+        uses: appleboy/ssh-action@v1
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: JWT_SECRET
+          script: |
+            cat > /opt/rentoroll/.env.docker <<EOF
+            PORT=8080
+            MONGODB_URI=mongodb://mongodb:27017
+            DATABASE=rentoroll
+            JWT_SECRET=${JWT_SECRET}
+            NODE_ENV=production
+            RUN_SETUP=false
+            EOF
+
+      - name: Pull image & restart backend
         uses: appleboy/ssh-action@v1
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,21 +117,20 @@ jobs:
             set -e
             cd /opt/rentoroll
 
-            # Pull the new image (authenticate first — GITHUB_TOKEN is single-use, valid for this run)
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-
             docker compose pull backend
 
-            # Restart only the backend — MongoDB is untouched
+            # Restart only backend — MongoDB untouched
             docker compose up -d --no-deps backend
 
-            # Wait up to 60s for health check to pass
+            # Wait up to 60s for health check
             echo "Waiting for health check..."
             for i in $(seq 1 12); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' rentoroll-backend 2>/dev/null || echo "missing")
               if [ "$STATUS" = "healthy" ]; then
                 echo "Healthy after $((i * 5))s"
                 docker logout ghcr.io
+                docker image prune -f
                 exit 0
               fi
               echo "  attempt $i/12 — status: $STATUS"
@@ -103,12 +141,3 @@ jobs:
             echo "ERROR: backend did not become healthy in time"
             docker logs --tail 50 rentoroll-backend
             exit 1
-
-      - name: Clean up old images on server
-        if: success()
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: docker image prune -f
