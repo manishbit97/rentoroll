@@ -91,6 +91,23 @@ export interface MonthlyRentResult {
 
 // ── Core fetch wrapper ─────────────────────────────────────────────────────
 
+// Recursively maps _id → id on any object/array returned from the API
+function normalizeIds(data: unknown): unknown {
+  if (Array.isArray(data)) return data.map(normalizeIds);
+  if (data && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = normalizeIds(obj[key]);
+    }
+    if (result._id !== undefined && result.id === undefined) {
+      result.id = result._id;
+    }
+    return result;
+  }
+  return data;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -115,7 +132,7 @@ async function request<T>(
     throw new Error(json.error ?? "Request failed");
   }
 
-  return json.data as T;
+  return normalizeIds(json.data) as T;
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────

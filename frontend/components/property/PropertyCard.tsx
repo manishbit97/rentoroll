@@ -20,7 +20,7 @@ export default function PropertyCard({ property, roomCount }: Props) {
         <MaterialCommunityIcons name="office-building-outline" size={26} color="#4f46e5" />
       </View>
       <View style={styles.body}>
-        <Text style={styles.name}>{property.name}</Text>
+        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{property.name}</Text>
         <Text style={styles.address} numberOfLines={1}>
           {property.address || "No address set"}
         </Text>

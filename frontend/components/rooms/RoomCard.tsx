@@ -55,7 +55,7 @@ export default function RoomCard({ item, propertyId, month, year }: Props) {
           />
         </View>
         <View style={styles.nameBlock}>
-          <Text style={styles.roomName}>{room.name}</Text>
+          <Text style={styles.roomName} numberOfLines={1} ellipsizeMode="tail">{room.name}</Text>
           <Text style={styles.tenantName} numberOfLines={1}>
             {isOccupied ? tenant_name || "Tenant assigned" : "Vacant"}
           </Text>

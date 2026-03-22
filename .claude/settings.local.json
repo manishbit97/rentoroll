@@ -1,8 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(go mod:*)",
-      "Bash(go build:*)"
-    ]
+    "allow": ["Bash(go mod:*)", "Bash(go build:*)", "Bash(*)"]
   }
 }

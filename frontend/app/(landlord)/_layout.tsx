@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
 import { TabBarAntIcon, TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Tabs } from "expo-router";
 
 export default function LandlordLayout() {
   const colorScheme = useColorScheme();
@@ -12,9 +12,8 @@ export default function LandlordLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
         tabBarStyle: {
-          borderTopWidth: 1,
+          borderTopWidth: 0,
           borderTopColor: "#e5e7eb",
-          paddingTop: 4,
         },
       }}
     >
@@ -23,7 +22,7 @@ export default function LandlordLayout() {
         options={{
           title: "Properties",
           tabBarIcon: ({ color }) => (
-            <TabBarAntIcon name="home" color={color} />
+            <TabBarAntIcon name="home" color={color} size={22} />
           ),
         }}
       />
@@ -32,7 +31,7 @@ export default function LandlordLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <TabBarMaterialIcon name="chart-bar" color={color} />
+            <TabBarMaterialIcon name="chart-bar" color={color} size={22} />
           ),
         }}
       />
@@ -41,7 +40,7 @@ export default function LandlordLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <TabBarAntIcon name="setting" color={color} />
+            <TabBarAntIcon name="setting" color={color} size={22} />
           ),
         }}
       />
