@@ -15,7 +15,7 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.rentoroll.in"
+        "EXPO_PUBLIC_API_URL": "https://rentoz.online"
       }
     },
     "production": {
@@ -27,7 +27,7 @@
       },
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.rentoroll.in"
+        "EXPO_PUBLIC_API_URL": "https://rentoz.online"
       }
     }
   },
