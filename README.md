@@ -2,9 +2,9 @@
 
 Rent management SaaS — NestJS API + React Native (Expo) frontend.
 
-**Production:** https://rentoz.online
-**API:** https://rentoz.online/api/v1
-**Swagger:** https://rentoz.online/api/docs
+- **Web / API:** https://rentoz.online
+- **API base:** https://rentoz.online/api/v1
+- **Swagger:** https://rentoz.online/api/docs
 
 ---
 
@@ -14,7 +14,7 @@ Rent management SaaS — NestJS API + React Native (Expo) frontend.
 RentoRoll/
 ├── backend-nest/        # NestJS API
 ├── frontend/            # Expo (React Native + Web)
-├── nginx/               # Nginx reverse proxy config
+├── nginx/               # Nginx reverse proxy + sudoers config
 ├── mongodb/init/        # MongoDB init scripts
 ├── docker-compose.yml   # Local & production orchestration
 └── .github/workflows/   # CI/CD pipelines
@@ -27,170 +27,164 @@ RentoRoll/
 **Prerequisites:** Docker, Node 20
 
 ```bash
-# 1. Copy env file
-cp .env.example .env.docker
+cp .env.example .env.docker     # edit JWT_SECRET before starting
 
-# 2. Start MongoDB + API
-docker compose up -d
+docker compose up -d            # starts MongoDB + API
 
-# 3. Start Expo
-cd frontend
-npm install
+cd frontend && npm install
 npx expo start
 ```
 
-API runs at `http://localhost:8080/api/v1`
-Swagger at `http://localhost:8080/api/docs`
-Mongo Express at `http://localhost:8081`
+| Service       | URL                            |
+| ------------- | ------------------------------ |
+| API           | http://localhost:8080/api/v1   |
+| Swagger       | http://localhost:8080/api/docs |
+| Mongo Express | http://localhost:8081          |
 
 ---
 
-## CI/CD
+## CI/CD Overview
 
-Two GitHub Actions workflows trigger on push to `main`:
+Everything after initial setup is **fully automatic** on push to `main`.
 
-| Workflow | Trigger | What it does |
-|----------|---------|--------------|
-| `backend.yml` | changes in `backend-nest/` | Builds Docker image → pushes to GHCR → deploys to Hetzner |
-| `web.yml` | changes in `frontend/` | Exports Expo web → uploads to `/var/www/rentoroll` on Hetzner |
-
-Mobile APK builds are triggered manually or on version tags (`v*`) via `mobile.yml`.
-
-### GitHub Secrets required
-
-| Secret | Description |
-|--------|-------------|
-| `SSH_HOST` | Hetzner server IP |
-| `SSH_USER` | Deploy user (e.g. `deploy`) |
-| `SSH_PRIVATE_KEY` | Private key for the deploy user |
-| `JWT_SECRET` | Strong random string — generate with `openssl rand -hex 32` |
-| `EXPO_TOKEN` | Expo account token (for EAS mobile builds only) |
+| Workflow      | Triggers when                  | What happens                                   |
+| ------------- | ------------------------------ | ---------------------------------------------- |
+| `backend.yml` | `backend-nest/` changes        | Build image → push GHCR → deploy API           |
+| `web.yml`     | `frontend/` changes            | Build image → push GHCR → deploy website       |
+| `infra.yml`   | `nginx/rentoroll.conf` changes | Upload config → issue/renew SSL → reload Nginx |
+| `mobile.yml`  | version tag `v*` or manual     | EAS build → APK / AAB                          |
 
 ---
 
-## Server Setup (Hetzner)
+## ⚠️ Manual Steps (do these once)
 
-### Option A — New server (recommended)
+These are the only things you ever do by hand. Everything else is automated.
 
-When creating the server in Hetzner Console, paste this into the **User Data** field:
+---
+
+### MANUAL STEP 1 — Generate deploy SSH key (once, ever)
+
+Run this **once on your laptop**. Reuse this key for every server, forever.
+
+```bash
+ssh-keygen -t ed25519 -C "rentoroll-deploy" -f ~/.ssh/rentoroll_deploy -N ""
+```
+
+Two files are created:
+
+```
+~/.ssh/rentoroll_deploy      ← private key (goes into GitHub Secrets)
+~/.ssh/rentoroll_deploy.pub  ← public key  (copied to every server)
+```
+
+---
+
+### MANUAL STEP 2 — Set GitHub Secrets (once, update SSH_HOST on server switch)
+
+Go to: **GitHub repo → Settings → Secrets and variables → Actions**
+
+| Secret            | Value                         | Notes                                                       |
+| ----------------- | ----------------------------- | ----------------------------------------------------------- |
+| `SSH_PRIVATE_KEY` | `cat ~/.ssh/rentoroll_deploy` | Set once, never change                                      |
+| `SSH_USER`        | `deploy`                      | Set once, never change                                      |
+| `JWT_SECRET`      | `openssl rand -hex 32`        | **Set once, NEVER change** — changing it logs out all users |
+| `CERTBOT_EMAIL`   | your email                    | For SSL expiry alerts                                       |
+| `SSH_HOST`        | server IP                     | **Update this when switching servers**                      |
+
+---
+
+### MANUAL STEP 3 — New server setup (once per server)
+
+#### 3a. Create server with Cloud-Init
+
+In Hetzner Console → Create Server → **User Data**, paste:
 
 ```yaml
 #cloud-config
 
-packages:
-  - curl
-  - wget
-
 runcmd:
-  # Install Docker
   - curl -fsSL https://get.docker.com | sh
-  - systemctl enable docker
-  - systemctl start docker
-
-  # Create deploy user
+  - systemctl enable docker && systemctl start docker
   - useradd -m -s /bin/bash deploy
   - usermod -aG docker deploy
   - mkdir -p /home/deploy/.ssh
   - chmod 700 /home/deploy/.ssh
-
-  # Create app directory
   - mkdir -p /opt/rentoroll
   - chown deploy:deploy /opt/rentoroll
-
-  # Install Nginx + Certbot
   - apt-get install -y nginx certbot python3-certbot-nginx
-  - systemctl enable nginx
-  - systemctl start nginx
+  - systemctl enable nginx && systemctl start nginx
 ```
 
-After the server boots (~2 min), add the deploy SSH key:
+Wait ~2 min for the server to boot and run the init script.
+
+#### 3b. Add deploy public key to server
 
 ```bash
-ssh root@<hetzner-ip> \
-  "echo '<deploy_public_key>' >> /home/deploy/.ssh/authorized_keys && \
-   chmod 600 /home/deploy/.ssh/authorized_keys && \
-   chown -R deploy:deploy /home/deploy/.ssh"
+cat ~/.ssh/rentoroll_deploy.pub  # copy this output
+
+ssh root@<server-ip> "
+  echo '<paste-public-key-here>' >> /home/deploy/.ssh/authorized_keys
+  chmod 600 /home/deploy/.ssh/authorized_keys
+  chown -R deploy:deploy /home/deploy/.ssh
+"
 ```
 
-### Option B — Existing server
+#### 3c. Install sudoers file
 
 ```bash
-curl -fsSL https://get.docker.com | sh
-systemctl enable docker && systemctl start docker
-apt-get install -y nginx certbot python3-certbot-nginx
-mkdir -p /opt/rentoroll
+scp nginx/sudoers-deploy root@<server-ip>:/etc/sudoers.d/deploy
+ssh root@<server-ip> "chmod 440 /etc/sudoers.d/deploy"
 ```
+
+#### 3d. Point DNS to server IP
+
+At your domain registrar:
+
+```
+A  rentoz.online      →  <server-ip>
+A  www.rentoz.online  →  <server-ip>
+```
+
+#### 3e. Trigger all workflows manually
+
+```
+GitHub → Actions → "Deploy Nginx + SSL"  → Run workflow
+GitHub → Actions → "Deploy Backend"      → Run workflow
+GitHub → Actions → "Deploy Website"      → Run workflow
+```
+
+`infra.yml` will automatically obtain the SSL certificate on first run.
 
 ---
 
-## Nginx + SSL (one-time)
+## Switching Servers
 
-```bash
-# Copy nginx config to server
-scp nginx/rentoroll.conf deploy@<hetzner-ip>:/etc/nginx/sites-enabled/rentoroll
+1. Create new server → follow **Step 3** above
+2. Update `SSH_HOST` secret to new server IP
+3. Trigger the 3 workflows manually (Step 3e)
 
-# Remove default site
-ssh deploy@<hetzner-ip> "rm -f /etc/nginx/sites-enabled/default"
-
-# Get SSL certificate
-ssh deploy@<hetzner-ip> "certbot --nginx -d rentoz.online -d www.rentoz.online"
-
-# Reload Nginx
-ssh deploy@<hetzner-ip> "systemctl reload nginx"
-```
-
-DNS must point to the server IP before running Certbot:
-
-```
-A  rentoz.online      →  <hetzner-ip>
-A  www.rentoz.online  →  <hetzner-ip>
-```
+**That's it.** `JWT_SECRET` stays the same — no users get logged out.
 
 ---
 
-## Deploy SSH Key Setup
+## Mongo Express (DB UI)
 
-Generate a dedicated key pair on your local machine (never reuse your personal key):
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/rentoroll_deploy
-```
-
-Copy the public key to the server:
-```bash
-ssh-copy-id -i ~/.ssh/rentoroll_deploy.pub deploy@<hetzner-ip>
-```
-
-Paste the private key into GitHub → Settings → Secrets → `SSH_PRIVATE_KEY`:
-```bash
-cat ~/.ssh/rentoroll_deploy
-```
-
----
-
-## Access Mongo Express (DB UI)
-
-Mongo Express is bound to `127.0.0.1:8081` — not exposed publicly. Access via SSH tunnel:
+Bound to `127.0.0.1` — not exposed publicly. Access via SSH tunnel:
 
 ```bash
-ssh -L 8081:localhost:8081 deploy@<hetzner-ip>
-# then open http://localhost:8081 in your browser
+ssh -L 8081:localhost:8081 deploy@<server-ip>
+# open http://localhost:8081
 ```
 
 ---
 
 ## Mobile Builds (EAS)
 
-```bash
+````bash
 cd frontend
+npm install -g eas-cli && eas login
 
-# Install EAS CLI
-npm install -g eas-cli
-eas login
-
-# Preview APK (internal testing)
-eas build --platform android --profile preview
-
-# Production AAB (Play Store)
-eas build --platform android --profile production
-```
+eas build --platform android --profile preview     # APK for testing
+eas build --platform android --profile production  # AAB for Play Store
+s```
+````

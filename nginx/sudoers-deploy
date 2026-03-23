@@ -1,0 +1,21 @@
+# Drop this file at /etc/sudoers.d/deploy on the server
+# Run: sudo visudo -c -f /etc/sudoers.d/deploy  (to validate before applying)
+#
+# Install:
+#   scp nginx/sudoers-deploy root@<ip>:/etc/sudoers.d/deploy
+#   ssh root@<ip> "chmod 440 /etc/sudoers.d/deploy"
+
+deploy ALL=(ALL) NOPASSWD: \
+  /usr/bin/apt-get update *, \
+  /usr/bin/apt-get install *, \
+  /usr/sbin/nginx, \
+  /usr/bin/nginx, \
+  /bin/systemctl enable nginx, \
+  /bin/systemctl start nginx, \
+  /bin/systemctl reload nginx, \
+  /bin/systemctl enable certbot.timer, \
+  /bin/systemctl start certbot.timer, \
+  /usr/bin/certbot *, \
+  /usr/bin/tee /etc/nginx/sites-enabled/rentoroll, \
+  /bin/mv /tmp/rentoroll.conf /etc/nginx/sites-enabled/rentoroll, \
+  /bin/rm -f /etc/nginx/sites-enabled/default

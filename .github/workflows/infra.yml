@@ -1,0 +1,88 @@
+name: Deploy Nginx + SSL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nginx/rentoroll.conf"
+      - ".github/workflows/infra.yml"
+  workflow_dispatch:    # allow manual trigger (e.g. after server switch)
+
+jobs:
+  deploy:
+    name: Nginx config + Let's Encrypt
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload nginx config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "nginx/rentoroll.conf"
+          target: "/tmp"
+          strip_components: 1
+
+      - name: Provision SSL & apply config
+        uses: appleboy/ssh-action@v1
+        env:
+          CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: CERTBOT_EMAIL
+          script: |
+            set -e
+
+            # ── Ensure nginx + certbot are installed ──────────────────────
+            if ! command -v nginx &>/dev/null; then
+              sudo apt-get update -q
+              sudo apt-get install -y nginx certbot python3-certbot-nginx
+            fi
+            sudo systemctl enable nginx
+            sudo systemctl start nginx || true
+
+            # Remove default site if it exists
+            sudo rm -f /etc/nginx/sites-enabled/default
+
+            # ── First-time SSL provisioning ───────────────────────────────
+            if [ ! -d "/etc/letsencrypt/live/rentoz.online" ]; then
+              echo "No certs found — running initial Let's Encrypt provisioning..."
+
+              # Temporarily serve plain HTTP so certbot can complete HTTP-01 challenge
+              echo 'server {
+                listen 80;
+                server_name rentoz.online www.rentoz.online;
+                location /.well-known/acme-challenge/ { root /var/www/certbot; }
+                location / { return 200 OK; add_header Content-Type text/plain; }
+              }' | sudo tee /etc/nginx/sites-enabled/rentoroll > /dev/null
+
+              sudo nginx -t
+              sudo systemctl reload nginx
+
+              # Obtain certificate
+              sudo certbot certonly --nginx \
+                -d rentoz.online -d www.rentoz.online \
+                --non-interactive --agree-tos \
+                -m "$CERTBOT_EMAIL"
+
+              echo "Certificates obtained successfully"
+            else
+              echo "Certs already exist — skipping provisioning"
+            fi
+
+            # ── Deploy full HTTPS config ──────────────────────────────────
+            sudo mv /tmp/rentoroll.conf /etc/nginx/sites-enabled/rentoroll
+            sudo nginx -t
+            sudo systemctl reload nginx
+            echo "Nginx reloaded with full HTTPS config"
+
+            # ── Ensure auto-renewal timer is active ───────────────────────
+            sudo systemctl enable certbot.timer
+            sudo systemctl start certbot.timer || true
+            echo "Certbot renewal timer: $(sudo systemctl is-active certbot.timer)"
