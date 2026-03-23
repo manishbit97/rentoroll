@@ -34,6 +34,14 @@ services:
       mongodb:
         condition: service_healthy
 
+  # ── Frontend (Expo Web) ───────────────────────────────────────────────────
+  frontend:
+    image: ghcr.io/manishbit97/rentoroll-web:latest
+    container_name: rentoroll-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"       # localhost-only — nginx proxies 443 → here
+
   # ── Backend API (NestJS) ──────────────────────────────────────────────────
   backend:
     image: ghcr.io/manishbit97/rentoroll-backend:latest
