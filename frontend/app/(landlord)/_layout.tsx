@@ -1,15 +1,11 @@
 import { TabBarAntIcon, TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { Tabs } from "expo-router";
 
 export default function LandlordLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: "#4f46e5",
         headerShown: false,
         tabBarStyle: {
           borderTopWidth: 0,

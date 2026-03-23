@@ -43,6 +43,7 @@ export interface Room {
   property_id: string;
   name: string;
   base_rent: number;
+  base_rent_effective_from?: string | null;
   tenant_id?: string;
   tenant_name?: string;
   tenant_email?: string;
@@ -51,7 +52,7 @@ export interface Room {
 
 export type PaymentStatus = "PAID" | "PARTIAL" | "PENDING";
 
-export type AuditAction = "PAYMENT_RECORDED" | "PAYMENT_UPDATED";
+export type AuditAction = "PAYMENT_RECORDED" | "PAYMENT_UPDATED" | "ADVANCE_APPLIED";
 
 export interface PaymentLogEntry {
   action: AuditAction;
@@ -81,12 +82,41 @@ export interface RentRecord {
   payment_history?: PaymentLogEntry[];
   created_at: string;
   updated_at: string;
+  // enriched fields (tenant endpoints only)
+  room_name?: string;
+  property_name?: string;
+  landlord_upi?: string;
+  landlord_name?: string;
+  // advance + vacating (from active assignment)
+  advance_amount?: number;
+  advance_adjusted?: boolean;
+  vacating_date?: string | null;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  phone: string;
+  upi_id: string;
 }
 
 export interface MonthlyRentResult {
   room: Room;
   rent_record: RentRecord;
   tenant_name?: string;
+  advance_amount: number;
+  advance_adjusted: boolean;
+  vacating_date: string | null;
+  vacating_set_by: string | null;
+}
+
+export interface ApplyAdvanceResult {
+  rent_record: RentRecord;
+  payment_applied: number;
+  refund: number;
+  shortfall: number;
 }
 
 // ── Core fetch wrapper ─────────────────────────────────────────────────────
@@ -157,6 +187,35 @@ export async function login(
   return request("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  return request("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(
+  email: string,
+  otp: string,
+  new_password: string
+): Promise<void> {
+  return request("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, otp, new_password }),
+  });
+}
+
+export async function getProfile(): Promise<UserProfile> {
+  return request("/auth/profile");
+}
+
+export async function updateProfile(data: Partial<Pick<UserProfile, "name" | "phone" | "upi_id">>): Promise<UserProfile> {
+  return request("/auth/profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
   });
 }
 
@@ -301,4 +360,54 @@ export async function getMyRent(
 
 export async function getMyHistory(): Promise<RentRecord[]> {
   return request("/tenant/history");
+}
+
+// ── Advance / Vacating / Rent Increase ────────────────────────────────────
+
+export async function updateAdvance(roomId: string, amount: number): Promise<void> {
+  return request(`/rooms/${roomId}/advance`, {
+    method: "PATCH",
+    body: JSON.stringify({ amount }),
+  });
+}
+
+export async function setVacatingDate(roomId: string, vacatingDate: string): Promise<void> {
+  return request(`/rooms/${roomId}/vacating`, {
+    method: "PATCH",
+    body: JSON.stringify({ vacating_date: vacatingDate }),
+  });
+}
+
+export async function clearVacatingDate(roomId: string): Promise<void> {
+  return request(`/rooms/${roomId}/vacating`, { method: "DELETE" });
+}
+
+export async function applyAdvance(rentRecordId: string): Promise<ApplyAdvanceResult> {
+  return request("/rent/apply-advance", {
+    method: "POST",
+    body: JSON.stringify({ rent_record_id: rentRecordId }),
+  });
+}
+
+export async function applyRentIncrease(
+  roomId: string,
+  newBaseRent: number,
+  fromMonth: number,
+  fromYear: number
+): Promise<{ updated_count: number; room: Room }> {
+  return request(`/rent/room/${roomId}/increase`, {
+    method: "POST",
+    body: JSON.stringify({ new_base_rent: newBaseRent, from_month: fromMonth, from_year: fromYear }),
+  });
+}
+
+export async function setMyVacatingDate(vacatingDate: string): Promise<void> {
+  return request("/tenant/vacating", {
+    method: "PATCH",
+    body: JSON.stringify({ vacating_date: vacatingDate }),
+  });
+}
+
+export async function clearMyVacatingDate(): Promise<void> {
+  return request("/tenant/vacating", { method: "DELETE" });
 }

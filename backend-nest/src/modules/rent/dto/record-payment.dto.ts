@@ -1,11 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class RecordPaymentDto {
   @ApiPropertyOptional({ description: 'Payment amount (omit to mark as fully paid)' })
   @IsOptional()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   amount?: number;
 
   @ApiPropertyOptional({ description: 'ISO date string of payment date' })

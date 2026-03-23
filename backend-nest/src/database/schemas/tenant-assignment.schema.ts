@@ -22,6 +22,18 @@ export class TenantAssignment {
 
   @Prop({ default: true })
   is_active: boolean;
+
+  @Prop({ default: 0 })
+  advance_amount: number;
+
+  @Prop({ default: false })
+  advance_adjusted: boolean;
+
+  @Prop({ default: null })
+  vacating_date: Date | null;
+
+  @Prop({ default: null })
+  vacating_set_by: string | null;
 }
 
 export const TenantAssignmentSchema =

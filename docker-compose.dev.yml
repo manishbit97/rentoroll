@@ -1,0 +1,7 @@
+services:
+  backend:
+    image: rentoroll-backend-dev
+    build:
+      context: ./backend-nest
+    env_file:
+      - .env.docker

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -6,6 +6,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { JwtPayload } from '@common/guards/jwt-auth.guard';
 import { RentService } from './rent.service';
+import { SetVacatingDateDto } from '../rooms/dto/set-vacating-date.dto';
 
 @ApiTags('tenant')
 @ApiBearerAuth()
@@ -30,5 +31,15 @@ export class TenantController {
   @Get('history')
   getMyHistory(@CurrentUser() user: JwtPayload) {
     return this.rentService.getMyHistory(user.user_id);
+  }
+
+  @Patch('vacating')
+  setVacatingDate(@CurrentUser() user: JwtPayload, @Body() dto: SetVacatingDateDto) {
+    return this.rentService.setMyVacatingDate(user.user_id, new Date(dto.vacating_date));
+  }
+
+  @Delete('vacating')
+  clearVacatingDate(@CurrentUser() user: JwtPayload) {
+    return this.rentService.clearMyVacatingDate(user.user_id);
   }
 }

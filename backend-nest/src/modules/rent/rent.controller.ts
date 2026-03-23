@@ -17,6 +17,8 @@ import { JwtPayload } from '@common/guards/jwt-auth.guard';
 import { RentService } from './rent.service';
 import { SaveRecordDto } from './dto/save-record.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
+import { ApplyAdvanceDto } from './dto/apply-advance.dto';
+import { RentIncreaseDto } from './dto/rent-increase.dto';
 
 @ApiTags('rent')
 @ApiBearerAuth()
@@ -26,12 +28,30 @@ export class RentController {
 
   // ── Landlord routes ──────────────────────────────────────────
 
-  // IMPORTANT: 'room/:roomId' MUST be declared before ':id' to avoid ambiguity
+  // IMPORTANT: 'room/:roomId' and 'apply-advance' MUST be declared before ':id' to avoid ambiguity
   @Get('room/:roomId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('landlord')
   getRoomHistory(@Param('roomId') roomId: string) {
     return this.rentService.getRoomHistory(roomId);
+  }
+
+  @Post('room/:roomId/increase')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('landlord')
+  applyRentIncrease(
+    @Param('roomId') roomId: string,
+    @Body() dto: RentIncreaseDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.rentService.applyRentIncrease(roomId, dto, user.user_id, user.email);
+  }
+
+  @Post('apply-advance')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('landlord')
+  applyAdvance(@Body() dto: ApplyAdvanceDto, @CurrentUser() user: JwtPayload) {
+    return this.rentService.applyAdvance(dto.rent_record_id, user.user_id, user.email);
   }
 
   @Get()

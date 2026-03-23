@@ -17,6 +17,9 @@ export class Room {
   @Prop({ required: true })
   base_rent: number;
 
+  @Prop({ default: null })
+  base_rent_effective_from: Date | null;
+
   // is_occupied is NOT stored — computed at query time from tenant_assignments
 }
 

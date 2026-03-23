@@ -59,6 +59,15 @@ export default function RoomCard({ item, propertyId, month, year }: Props) {
           <Text style={styles.tenantName} numberOfLines={1}>
             {isOccupied ? tenant_name || "Tenant assigned" : "Vacant"}
           </Text>
+          {item.vacating_date && (
+            <View style={styles.vacatingChip}>
+              <MaterialCommunityIcons name="calendar-remove" size={11} color="#d97706" />
+              <Text style={styles.vacatingChipText}>
+                Moving out{" "}
+                {new Date(item.vacating_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.actions}>
           <View style={[styles.badge, { backgroundColor: statusBg }]}>
@@ -199,6 +208,13 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 13, fontWeight: "700", color: "#374151" },
   totalValue: { fontSize: 14, fontWeight: "700", color: "#4f46e5" },
+  vacatingChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 3,
+  },
+  vacatingChipText: { fontSize: 11, color: "#d97706", fontWeight: "500" },
   noRecord: {
     fontSize: 12,
     color: "#9ca3af",

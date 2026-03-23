@@ -1,15 +1,68 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from "react-native";
 import { router } from "expo-router";
 import { Property } from "@/services/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface Props {
   property: Property;
-  roomCount?: number;
+  onEdit: (property: Property) => void;
+  onDelete: (property: Property) => void;
 }
 
-export default function PropertyCard({ property, roomCount }: Props) {
+export default function PropertyCard({ property, onEdit, onDelete }: Props) {
+  const handleOptions = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Cancel", "Edit Name / Address", "Delete Property"],
+          destructiveButtonIndex: 2,
+          cancelButtonIndex: 0,
+          title: property.name,
+        },
+        (index) => {
+          if (index === 1) onEdit(property);
+          if (index === 2) {
+            Alert.alert(
+              "Delete Property",
+              `Delete "${property.name}"? This cannot be undone.`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", style: "destructive", onPress: () => onDelete(property) },
+              ]
+            );
+          }
+        }
+      );
+    } else {
+      Alert.alert(property.name, "What do you want to do?", [
+        { text: "Edit", onPress: () => onEdit(property) },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () =>
+            Alert.alert(
+              "Delete Property",
+              `Delete "${property.name}"? This cannot be undone.`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", style: "destructive", onPress: () => onDelete(property) },
+              ]
+            ),
+        },
+        { text: "Cancel", style: "cancel" },
+      ]);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={styles.card}
@@ -24,11 +77,13 @@ export default function PropertyCard({ property, roomCount }: Props) {
         <Text style={styles.address} numberOfLines={1}>
           {property.address || "No address set"}
         </Text>
-        {roomCount !== undefined && (
-          <Text style={styles.rooms}>{roomCount} room{roomCount !== 1 ? "s" : ""}</Text>
-        )}
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={22} color="#9ca3af" />
+      <TouchableOpacity
+        onPress={handleOptions}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      >
+        <MaterialCommunityIcons name="dots-vertical" size={22} color="#9ca3af" />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -61,10 +116,4 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   name: { fontSize: 16, fontWeight: "600", color: "#111827" },
   address: { fontSize: 13, color: "#6b7280", marginTop: 2 },
-  rooms: {
-    fontSize: 12,
-    color: "#4f46e5",
-    fontWeight: "500",
-    marginTop: 4,
-  },
 });

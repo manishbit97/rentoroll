@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -15,6 +16,10 @@ import {
   TenantAssignmentDocument,
 } from '@database/schemas/tenant-assignment.schema';
 import { User, UserDocument } from '@database/schemas/user.schema';
+import {
+  RentRecord,
+  RentRecordDocument,
+} from '@database/schemas/rent-record.schema';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { AssignTenantDto } from './dto/assign-tenant.dto';
 
@@ -27,6 +32,8 @@ export class RoomsService {
     @InjectModel(TenantAssignment.name)
     private readonly assignmentModel: Model<TenantAssignmentDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(RentRecord.name)
+    private readonly rentModel: Model<RentRecordDocument>,
   ) {}
 
   async listByProperty(propertyId: string, landlordId: string) {
@@ -101,12 +108,22 @@ export class RoomsService {
       { $set: { is_active: false, end_date: new Date() } },
     );
 
+    const tenantId = new Types.ObjectId(dto.tenant_id);
+
     const assignment = await this.assignmentModel.create({
       room_id: new Types.ObjectId(roomId),
-      tenant_id: new Types.ObjectId(dto.tenant_id),
+      tenant_id: tenantId,
       start_date: new Date(),
       is_active: true,
     });
+
+    // Backfill tenant_id on any rent record stubs that were auto-created
+    // before this tenant was assigned (they would have tenant_id = null)
+    await this.rentModel.updateMany(
+      { room_id: new Types.ObjectId(roomId), tenant_id: null },
+      { $set: { tenant_id: tenantId } },
+    );
+
     return assignment;
   }
 
@@ -119,5 +136,46 @@ export class RoomsService {
       { $set: { is_active: false, end_date: new Date() } },
     );
     return null;
+  }
+
+  async updateAdvance(roomId: string, amount: number) {
+    const assignment = await this.assignmentModel.findOne({
+      room_id: new Types.ObjectId(roomId),
+      is_active: true,
+    });
+    if (!assignment) throw new NotFoundException('No active tenant in this room');
+    if (assignment.advance_adjusted) {
+      throw new BadRequestException('Advance has already been applied to a rent record');
+    }
+    assignment.advance_amount = amount;
+    await assignment.save();
+    return assignment;
+  }
+
+  async setVacatingDate(roomId: string, vacatingDate: Date) {
+    const assignment = await this.assignmentModel.findOne({
+      room_id: new Types.ObjectId(roomId),
+      is_active: true,
+    });
+    if (!assignment) throw new NotFoundException('No active tenant in this room');
+    if (vacatingDate <= new Date()) {
+      throw new BadRequestException('Vacating date must be in the future');
+    }
+    assignment.vacating_date = vacatingDate;
+    assignment.vacating_set_by = 'landlord';
+    await assignment.save();
+    return assignment;
+  }
+
+  async clearVacatingDate(roomId: string) {
+    const assignment = await this.assignmentModel.findOne({
+      room_id: new Types.ObjectId(roomId),
+      is_active: true,
+    });
+    if (!assignment) throw new NotFoundException('No active tenant in this room');
+    assignment.vacating_date = null;
+    assignment.vacating_set_by = null;
+    await assignment.save();
+    return assignment;
   }
 }

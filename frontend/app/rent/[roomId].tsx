@@ -1,13 +1,27 @@
 import {
+  applyAdvance,
+  applyRentIncrease,
   assignTenant,
+  clearVacatingDate,
   getMonthlyRent,
   markAsPaid,
   MonthlyRentResult,
   removeTenant,
   saveRentRecord,
   searchTenant,
+  setVacatingDate,
   TenantSearchResult,
+  updateAdvance,
 } from "@/services/api";
+
+function shortDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+import PaymentTimeline from "@/components/PaymentTimeline";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,6 +111,24 @@ export default function RentEntryScreen() {
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [payAmount, setPayAmount] = useState("");
 
+  // ── Advance / deposit state ────────────────────────────────────────
+  const [advanceEdit, setAdvanceEdit] = useState("0");
+  const [savingAdvance, setSavingAdvance] = useState(false);
+  const [applyAdvanceDialogOpen, setApplyAdvanceDialogOpen] = useState(false);
+  const [applyingAdvance, setApplyingAdvance] = useState(false);
+
+  // ── Vacating date state ────────────────────────────────────────────
+  const [showVacatingPicker, setShowVacatingPicker] = useState(false);
+  const [vacatingPickerDate, setVacatingPickerDate] = useState(new Date());
+  const [clearingVacating, setClearingVacating] = useState(false);
+
+  // ── Rent increase modal ────────────────────────────────────────────
+  const [increaseModalOpen, setIncreaseModalOpen] = useState(false);
+  const [newBaseRent, setNewBaseRent] = useState("");
+  const [increaseFromMonth, setIncreaseFromMonth] = useState(now.getMonth() + 1);
+  const [increaseFromYear, setIncreaseFromYear] = useState(now.getFullYear());
+  const [applyingIncrease, setApplyingIncrease] = useState(false);
+
   const loadData = useCallback(async () => {
     if (!propertyId || !roomId) return;
     setLoading(true);
@@ -110,6 +142,8 @@ export default function RentEntryScreen() {
         );
         setElectricity(String(found.rent_record?.electricity ?? ""));
         setNotes(found.rent_record?.notes ?? "");
+        setAdvanceEdit(String(found.advance_amount ?? 0));
+        setNewBaseRent(String(found.room.base_rent));
       }
     } catch (e: any) {
       toast.error(e.message);
@@ -156,14 +190,16 @@ export default function RentEntryScreen() {
       toast.info("Please save the rent record before marking as paid.");
       return;
     }
-    const due = rentResult.rent_record.total ?? total;
-    setPayAmount(String(due));
+    // Pre-fill with existing paid_amount when correcting so landlord
+    // can see what was last recorded and update from there
+    const prefill = paidAmount > 0 ? paidAmount : (rentResult.rent_record.total ?? total);
+    setPayAmount(String(prefill));
     setPayDialogOpen(true);
   };
 
   const handleMarkPaid = async () => {
     const amount = parseFloat(payAmount);
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(amount) || amount < 0) {
       toast.error("Enter a valid amount.");
       return;
     }
@@ -237,6 +273,91 @@ export default function RentEntryScreen() {
   const cf = rentResult?.rent_record?.carry_forward ?? 0;
   const paidAmount = rentResult?.rent_record?.paid_amount ?? 0;
   const recordTotal = rentResult?.rent_record?.total ?? total;
+  const advanceAmount = rentResult?.advance_amount ?? 0;
+  const advanceAdjusted = rentResult?.advance_adjusted ?? false;
+  const vacatingDate = rentResult?.vacating_date ?? null;
+  const vacatingSetBy = rentResult?.vacating_set_by ?? null;
+
+  const handleSaveAdvance = async () => {
+    const amount = parseFloat(advanceEdit);
+    if (isNaN(amount) || amount < 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    setSavingAdvance(true);
+    try {
+      await updateAdvance(roomId!, amount);
+      toast.success("Security deposit updated.");
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSavingAdvance(false);
+    }
+  };
+
+  const handleApplyAdvance = async () => {
+    if (!rentResult?.rent_record?.id) return;
+    setApplyAdvanceDialogOpen(false);
+    setApplyingAdvance(true);
+    try {
+      const result = await applyAdvance(rentResult.rent_record.id);
+      if (result.refund > 0) {
+        toast.success(`Advance applied. ₹${result.refund.toLocaleString("en-IN")} refund due to tenant.`);
+      } else if (result.shortfall > 0) {
+        toast.success(`Advance applied. ₹${result.shortfall.toLocaleString("en-IN")} still owed.`);
+      } else {
+        toast.success("Advance applied. Balance fully settled.");
+      }
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setApplyingAdvance(false);
+    }
+  };
+
+  const handleSetVacatingDate = async (date: Date) => {
+    try {
+      await setVacatingDate(roomId!, date.toISOString().split("T")[0]);
+      toast.success("Move-out date set.");
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleClearVacatingDate = async () => {
+    setClearingVacating(true);
+    try {
+      await clearVacatingDate(roomId!);
+      toast.success("Move-out date cancelled.");
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setClearingVacating(false);
+    }
+  };
+
+  const handleApplyRentIncrease = async () => {
+    const rent = parseFloat(newBaseRent);
+    if (isNaN(rent) || rent <= 0) {
+      toast.error("Enter a valid rent amount.");
+      return;
+    }
+    setApplyingIncrease(true);
+    try {
+      const result = await applyRentIncrease(roomId!, rent, increaseFromMonth, increaseFromYear);
+      setIncreaseModalOpen(false);
+      toast.success(`Rent updated. ${result.updated_count} record(s) repriced.`);
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setApplyingIncrease(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -272,20 +393,8 @@ export default function RentEntryScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Tenant assignment button — toggles between Add / Remove */}
-        {hasTenant ? (
-          <TouchableOpacity
-            style={styles.removeTenantBtn}
-            onPress={() => setRemoveDialogOpen(true)}
-          >
-            <MaterialCommunityIcons
-              name="account-remove-outline"
-              size={18}
-              color="#ef4444"
-            />
-            <Text style={styles.removeTenantText}>Remove Tenant</Text>
-          </TouchableOpacity>
-        ) : (
+        {/* Add Tenant button — only shown when vacant */}
+        {!hasTenant && (
           <TouchableOpacity
             style={styles.addTenantBtn}
             onPress={() => setAssignModal(true)}
@@ -311,8 +420,71 @@ export default function RentEntryScreen() {
             </View>
           ) : (
             <Text style={styles.noTenant}>
-              No tenant assigned — tap "Add Tenant" above
+              No tenant assigned
             </Text>
+          )}
+
+          {hasTenant && (
+            <>
+              {/* Security Deposit row */}
+              <View style={styles.depositRow}>
+                <Text style={styles.depositLabel}>Security Deposit</Text>
+                {advanceAdjusted ? (
+                  <View style={styles.appliedBadge}>
+                    <Text style={styles.appliedBadgeText}>Applied</Text>
+                  </View>
+                ) : (
+                  <View style={styles.depositEditRow}>
+                    <Text style={styles.depositRupee}>₹</Text>
+                    <TextInput
+                      style={styles.depositInput}
+                      keyboardType="numeric"
+                      value={advanceEdit}
+                      onChangeText={setAdvanceEdit}
+                      onBlur={handleSaveAdvance}
+                    />
+                    {savingAdvance && <ActivityIndicator size="small" color="#4f46e5" style={{ marginLeft: 4 }} />}
+                  </View>
+                )}
+              </View>
+
+              {/* Vacating date */}
+              {vacatingDate ? (
+                <View style={styles.vacatingBanner}>
+                  <MaterialCommunityIcons name="calendar-remove" size={15} color="#d97706" />
+                  <Text style={styles.vacatingBannerText}>
+                    Moving out: {shortDate(vacatingDate)} (set by {vacatingSetBy === "tenant" ? "Tenant" : "You"})
+                  </Text>
+                  <TouchableOpacity onPress={handleClearVacatingDate} disabled={clearingVacating}>
+                    <Text style={styles.vacatingCancelLink}>{clearingVacating ? "…" : "Cancel"}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.setMoveoutBtn}
+                  onPress={() => setShowVacatingPicker(true)}
+                >
+                  <MaterialCommunityIcons name="calendar-plus" size={14} color="#6b7280" />
+                  <Text style={styles.setMoveoutText}>Set move-out date</Text>
+                </TouchableOpacity>
+              )}
+
+              {showVacatingPicker && (
+                <DateTimePicker
+                  value={vacatingPickerDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  minimumDate={new Date(Date.now() + 86400000)}
+                  onChange={(_, date) => {
+                    setShowVacatingPicker(false);
+                    if (date) {
+                      setVacatingPickerDate(date);
+                      handleSetVacatingDate(date);
+                    }
+                  }}
+                />
+              )}
+            </>
           )}
 
           <Text style={styles.fieldLabel}>Rent Collection Period</Text>
@@ -383,6 +555,14 @@ export default function RentEntryScreen() {
               </View>
             </>
           )}
+
+          <TouchableOpacity
+            style={styles.updateRentLink}
+            onPress={() => setIncreaseModalOpen(true)}
+          >
+            <MaterialCommunityIcons name="pencil-outline" size={14} color="#6b7280" />
+            <Text style={styles.updateRentLinkText}>Update base rent from month</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Notes */}
@@ -426,6 +606,25 @@ export default function RentEntryScreen() {
             />
           )}
 
+          {advanceAmount > 0 && !advanceAdjusted && !isPaid && (
+            <TouchableOpacity
+              style={[styles.applyAdvanceBtn, applyingAdvance && { opacity: 0.6 }]}
+              onPress={() => setApplyAdvanceDialogOpen(true)}
+              disabled={applyingAdvance}
+            >
+              {applyingAdvance ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="bank-transfer" size={18} color="#fff" />
+                  <Text style={styles.applyAdvanceBtnText}>
+                    Apply Advance (₹{advanceAmount.toLocaleString("en-IN")})
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.paidBtn, isPaid && styles.paidBtnUpdate, markingPaid && { opacity: 0.6 }]}
             onPress={openPayDialog}
@@ -452,25 +651,10 @@ export default function RentEntryScreen() {
         {(rentResult?.rent_record?.payment_history?.length ?? 0) > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Payment Log</Text>
-            {rentResult!.rent_record!.payment_history!.map((entry, i) => (
-              <View key={i} style={styles.logRow}>
-                <View style={styles.logLeft}>
-                  <Text style={styles.logAction}>
-                    {entry.action === "PAYMENT_UPDATED" ? "CORRECTED" : "RECORDED"}
-                  </Text>
-                  <Text style={styles.logDate}>
-                    {new Date(entry.at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                  </Text>
-                  <Text style={styles.logEmail} numberOfLines={1}>{entry.by_email}</Text>
-                </View>
-                <View style={styles.logRight}>
-                  <Text style={styles.logAmount}>₹{entry.amount.toLocaleString("en-IN")}</Text>
-                  {entry.prev_amount != null && entry.prev_amount > 0 && (
-                    <Text style={styles.logPrev}>was ₹{entry.prev_amount.toLocaleString("en-IN")}</Text>
-                  )}
-                </View>
-              </View>
-            ))}
+            <PaymentTimeline
+              entries={rentResult!.rent_record!.payment_history!}
+              showEmail
+            />
           </View>
         )}
 
@@ -495,6 +679,17 @@ export default function RentEntryScreen() {
             <Text style={styles.saveBtnText}>Save Update</Text>
           )}
         </TouchableOpacity>
+
+        {/* Remove Tenant — low-intent, bottom of page */}
+        {hasTenant && (
+          <TouchableOpacity
+            style={styles.removeTenantLink}
+            onPress={() => setRemoveDialogOpen(true)}
+          >
+            <MaterialCommunityIcons name="account-remove-outline" size={15} color="#9ca3af" />
+            <Text style={styles.removeTenantLinkText}>Remove tenant from this flat</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {/* ── Assign Tenant Modal ──────────────────────────────────────── */}
@@ -619,22 +814,66 @@ export default function RentEntryScreen() {
       <AlertDialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Record Payment</AlertDialogTitle>
-            <AlertDialogDescription>
-              Total due: ₹{recordTotal.toLocaleString("en-IN")}. Enter the
-              amount received. Any shortfall carries to next month; any excess
-              becomes a credit.
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {paidAmount > 0 ? "Correct Payment" : "Record Payment"}
+            </AlertDialogTitle>
           </AlertDialogHeader>
+
+          {/* "Replaces, not adds" warning — shown only when correcting */}
+          {paidAmount > 0 && (
+            <View style={styles.payWarn}>
+              <MaterialCommunityIcons name="information-outline" size={15} color="#92400e" style={{ marginTop: 1 }} />
+              <Text style={styles.payWarnText}>
+                This <Text style={{ fontWeight: "700" }}>replaces</Text> the previously recorded{" "}
+                <Text style={{ fontWeight: "700" }}>₹{paidAmount.toLocaleString("en-IN")}</Text> — it does not add to it.
+                Enter the <Text style={{ fontWeight: "700" }}>total</Text> received so far.
+              </Text>
+            </View>
+          )}
+
+          {/* Total due reference row */}
+          <View style={styles.payMeta}>
+            <Text style={styles.payMetaLabel}>Total due</Text>
+            <Text style={styles.payMetaValue}>₹{recordTotal.toLocaleString("en-IN")}</Text>
+          </View>
+
+          {/* Amount input */}
           <TextInput
             style={styles.payInput}
             keyboardType="numeric"
             value={payAmount}
             onChangeText={setPayAmount}
-            placeholder="Amount received (₹)"
+            placeholder="Total received (₹)"
             placeholderTextColor="#9ca3af"
             selectTextOnFocus
           />
+
+          {/* Live outcome preview */}
+          {(() => {
+            const entered = parseFloat(payAmount);
+            if (isNaN(entered) || entered < 0) return null;
+            if (entered === 0 && paidAmount === 0) return null;
+            const diff = entered - recordTotal;
+            let icon: any, color: string, msg: string;
+            if (diff >= 0) {
+              icon = "check-circle-outline";
+              color = "#10b981";
+              msg = diff > 0
+                ? `Fully paid + ₹${diff.toLocaleString("en-IN")} credit rolls to next month`
+                : "Marks this month as fully paid";
+            } else {
+              icon = "arrow-right-circle-outline";
+              color = "#f59e0b";
+              msg = `₹${Math.abs(diff).toLocaleString("en-IN")} shortfall carries to next month`;
+            }
+            return (
+              <View style={styles.payPreview}>
+                <MaterialCommunityIcons name={icon} size={15} color={color} />
+                <Text style={[styles.payPreviewText, { color }]}>{msg}</Text>
+              </View>
+            );
+          })()}
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onPress={handleMarkPaid}>Confirm</AlertDialogAction>
@@ -659,6 +898,100 @@ export default function RentEntryScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Apply Advance Dialog ──────────────────────────────────────── */}
+      <AlertDialog open={applyAdvanceDialogOpen} onOpenChange={setApplyAdvanceDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Security Deposit</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apply ₹{advanceAmount.toLocaleString("en-IN")} advance toward this month's rent? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onPress={handleApplyAdvance}>Apply</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Rent Increase Modal ───────────────────────────────────────── */}
+      <Modal visible={increaseModalOpen} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Update Base Rent</Text>
+            <TouchableOpacity onPress={() => setIncreaseModalOpen(false)}>
+              <MaterialCommunityIcons name="close" size={24} color="#111827" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalBody}>
+            <Text style={styles.modalHint}>
+              Update the base rent for this flat. Changes apply to all unpaid records from the selected month onwards.
+            </Text>
+            <Text style={styles.fieldLabel}>New Base Rent (₹)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 12000"
+              placeholderTextColor="#9ca3af"
+              keyboardType="numeric"
+              value={newBaseRent}
+              onChangeText={setNewBaseRent}
+            />
+            <Text style={[styles.fieldLabel, { marginTop: 14 }]}>Effective From Month</Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Month</Text>
+                <View style={[styles.input, { justifyContent: "center", padding: 0 }]}>
+                  <TextInput
+                    style={{ paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: "#111827" }}
+                    keyboardType="numeric"
+                    value={String(increaseFromMonth)}
+                    onChangeText={(v) => {
+                      const n = parseInt(v);
+                      if (!isNaN(n) && n >= 1 && n <= 12) setIncreaseFromMonth(n);
+                    }}
+                    placeholder="1–12"
+                    placeholderTextColor="#9ca3af"
+                  />
+                </View>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Year</Text>
+                <View style={[styles.input, { justifyContent: "center", padding: 0 }]}>
+                  <TextInput
+                    style={{ paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: "#111827" }}
+                    keyboardType="numeric"
+                    value={String(increaseFromYear)}
+                    onChangeText={(v) => {
+                      const n = parseInt(v);
+                      if (!isNaN(n) && n >= 2000) setIncreaseFromYear(n);
+                    }}
+                    placeholder="e.g. 2025"
+                    placeholderTextColor="#9ca3af"
+                  />
+                </View>
+              </View>
+            </View>
+            <View style={styles.payWarn}>
+              <MaterialCommunityIcons name="information-outline" size={15} color="#92400e" style={{ marginTop: 1 }} />
+              <Text style={styles.payWarnText}>
+                Paid records will not be changed. Only pending/partial records from {MONTHS[increaseFromMonth - 1]} {increaseFromYear} onwards will be updated.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.assignBtn, applyingIncrease && { opacity: 0.6 }]}
+              onPress={handleApplyRentIncrease}
+              disabled={applyingIncrease}
+            >
+              {applyingIncrease ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.assignBtnText}>Confirm Rent Update</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -694,18 +1027,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addTenantText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  removeTenantBtn: {
+  removeTenantLink: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fef2f2",
-    borderRadius: 10,
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#fecaca",
+    gap: 6,
+    paddingVertical: 16,
+    marginTop: 4,
   },
-  removeTenantText: { color: "#ef4444", fontSize: 15, fontWeight: "600" },
+  removeTenantLinkText: { fontSize: 13, color: "#9ca3af" },
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -903,22 +1233,103 @@ const styles = StyleSheet.create({
   },
   // ── Update payment button variant ──
   paidBtnUpdate: { backgroundColor: "#6366f1" },
-  // ── Payment audit log ──
-  logRow: {
+  // ── Payment dialog extras ──
+  payWarn: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#fffbeb",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    marginBottom: 12,
+  },
+  payWarnText: { flex: 1, fontSize: 13, color: "#92400e", lineHeight: 18 },
+  payMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  logLeft: { flex: 1, gap: 2 },
-  logAction: { fontSize: 11, fontWeight: "700", color: "#6366f1", letterSpacing: 0.5 },
-  logDate: { fontSize: 12, color: "#374151", fontWeight: "500" },
-  logEmail: { fontSize: 11, color: "#9ca3af" },
-  logRight: { alignItems: "flex-end", gap: 2 },
-  logAmount: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  logPrev: { fontSize: 11, color: "#9ca3af", textDecorationLine: "line-through" },
+  payMetaLabel: { fontSize: 13, color: "#6b7280" },
+  payMetaValue: { fontSize: 14, fontWeight: "700", color: "#374151" },
+  payPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  payPreviewText: { fontSize: 13, fontWeight: "600" },
+  // ── Deposit row ──
+  depositRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  depositLabel: { fontSize: 13, color: "#6b7280", fontWeight: "500" },
+  appliedBadge: {
+    backgroundColor: "#f3f4f6",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  appliedBadgeText: { fontSize: 12, color: "#9ca3af", fontWeight: "600" },
+  depositEditRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  depositRupee: { fontSize: 15, color: "#374151" },
+  depositInput: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111827",
+    minWidth: 80,
+    textAlign: "right",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 2,
+  },
+  // ── Vacating date ──
+  vacatingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#fffbeb",
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    marginBottom: 12,
+  },
+  vacatingBannerText: { flex: 1, fontSize: 13, color: "#92400e" },
+  vacatingCancelLink: { fontSize: 13, color: "#4f46e5", fontWeight: "600" },
+  setMoveoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+  },
+  setMoveoutText: { fontSize: 13, color: "#6b7280" },
+  // ── Update rent link ──
+  updateRentLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+  },
+  updateRentLinkText: { fontSize: 13, color: "#6b7280" },
+  // ── Apply advance button ──
+  applyAdvanceBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#f59e0b",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  applyAdvanceBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
   // ── No record banner ──
   noRecordBanner: {
     flexDirection: "row",

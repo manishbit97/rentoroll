@@ -22,6 +22,15 @@ export class User {
 
   @Prop({ default: '' })
   phone: string;
+
+  @Prop({ default: '' })
+  upi_id: string;
+
+  @Prop({ default: null })
+  reset_otp: string | null;
+
+  @Prop({ default: null })
+  reset_otp_expires_at: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

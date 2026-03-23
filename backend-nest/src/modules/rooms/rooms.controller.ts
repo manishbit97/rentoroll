@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Param,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -14,6 +15,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { AssignTenantDto } from './dto/assign-tenant.dto';
+import { UpdateAdvanceDto } from './dto/update-advance.dto';
+import { SetVacatingDateDto } from './dto/set-vacating-date.dto';
 
 @ApiTags('rooms')
 @ApiBearerAuth()
@@ -41,5 +44,20 @@ export class RoomsController {
   @Delete(':id/assign')
   removeAssignment(@Param('id') id: string) {
     return this.roomsService.removeTenant(id);
+  }
+
+  @Patch(':id/advance')
+  updateAdvance(@Param('id') id: string, @Body() dto: UpdateAdvanceDto) {
+    return this.roomsService.updateAdvance(id, dto.amount);
+  }
+
+  @Patch(':id/vacating')
+  setVacatingDate(@Param('id') id: string, @Body() dto: SetVacatingDateDto) {
+    return this.roomsService.setVacatingDate(id, new Date(dto.vacating_date));
+  }
+
+  @Delete(':id/vacating')
+  clearVacatingDate(@Param('id') id: string) {
+    return this.roomsService.clearVacatingDate(id);
   }
 }

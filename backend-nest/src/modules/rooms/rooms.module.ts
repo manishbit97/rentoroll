@@ -7,6 +7,10 @@ import {
   TenantAssignmentSchema,
 } from '@database/schemas/tenant-assignment.schema';
 import { User, UserSchema } from '@database/schemas/user.schema';
+import {
+  RentRecord,
+  RentRecordSchema,
+} from '@database/schemas/rent-record.schema';
 import { RoomsController } from './rooms.controller';
 import { RoomsService } from './rooms.service';
 
@@ -17,6 +21,7 @@ import { RoomsService } from './rooms.service';
       { name: Property.name, schema: PropertySchema },
       { name: TenantAssignment.name, schema: TenantAssignmentSchema },
       { name: User.name, schema: UserSchema },
+      { name: RentRecord.name, schema: RentRecordSchema },
     ]),
   ],
   controllers: [RoomsController],
