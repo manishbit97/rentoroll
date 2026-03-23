@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class MailService {
@@ -8,10 +8,10 @@ export class MailService {
   private transporter: nodemailer.Transporter | null = null;
 
   constructor(private readonly config: ConfigService) {
-    const smtp = this.config.get('app.smtp');
+    const smtp = this.config.get("app.smtp");
 
     this.logger.debug(
-      `SMTP config loaded — host="${smtp?.host}" port=${smtp?.port} user="${smtp?.user}" pass=${smtp?.pass ? '***set***' : 'NOT SET'} from="${smtp?.from}"`,
+      `SMTP config loaded — host="${smtp?.host}" port=${smtp?.port} user="${smtp?.user}" pass=${smtp?.pass ? "***set***" : "NOT SET"} from="${smtp?.from}"`,
     );
 
     if (smtp?.host && smtp?.user && smtp?.pass) {
@@ -24,7 +24,7 @@ export class MailService {
       this.logger.log(`SMTP transporter created (${smtp.host}:${smtp.port})`);
     } else {
       this.logger.warn(
-        `SMTP not fully configured — emails will be logged to console. Missing: ${[!smtp?.host && 'SMTP_HOST', !smtp?.user && 'SMTP_USER', !smtp?.pass && 'SMTP_PASS'].filter(Boolean).join(', ')}`,
+        `SMTP not fully configured — emails will be logged to console. Missing: ${[!smtp?.host && "SMTP_HOST", !smtp?.user && "SMTP_USER", !smtp?.pass && "SMTP_PASS"].filter(Boolean).join(", ")}`,
       );
     }
   }
@@ -36,11 +36,11 @@ export class MailService {
     propertyName: string,
     vacatingDate: Date,
   ): Promise<void> {
-    const from = this.config.get<string>('app.smtp.from');
-    const dateStr = vacatingDate.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+    const from = this.config.get<string>("app.smtp.from");
+    const dateStr = vacatingDate.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
     const subject = `Move-Out Notice — ${roomName}`;
     const html = `
@@ -54,22 +54,34 @@ export class MailService {
     if (this.transporter) {
       this.logger.log(`Sending move-out notice email to ${to}...`);
       try {
-        const info = await this.transporter.sendMail({ from, to, subject, html });
-        this.logger.log(`Move-out notice sent to ${to} — messageId: ${info.messageId}`);
+        const info = await this.transporter.sendMail({
+          from,
+          to,
+          subject,
+          html,
+        });
+        this.logger.log(
+          `Move-out notice sent to ${to} — messageId: ${info.messageId}`,
+        );
       } catch (err: any) {
-        this.logger.error(`Failed to send notice email to ${to}: ${err.message}`, err.stack);
+        this.logger.error(
+          `Failed to send notice email to ${to}: ${err.message}`,
+          err.stack,
+        );
         // fire-and-forget — swallow error
       }
     } else {
       this.logger.warn(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-      this.logger.warn(`  DEV MODE — Move-out notice for ${to}: ${tenantName} leaving ${roomName} on ${dateStr}`);
+      this.logger.warn(
+        `  DEV MODE — Move-out notice for ${to}: ${tenantName} leaving ${roomName} on ${dateStr}`,
+      );
       this.logger.warn(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     }
   }
 
   async sendOtp(to: string, name: string, otp: string): Promise<void> {
-    const from = this.config.get<string>('app.smtp.from');
-    const subject = 'RentoRoll — Your password reset OTP';
+    const from = this.config.get<string>("app.smtp.from");
+    const subject = "RentoRoll — Your password reset OTP";
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#4f46e5;">Reset your password</h2>
@@ -86,10 +98,20 @@ export class MailService {
     if (this.transporter) {
       this.logger.log(`Sending OTP email to ${to}...`);
       try {
-        const info = await this.transporter.sendMail({ from, to, subject, html });
-        this.logger.log(`OTP email sent to ${to} — messageId: ${info.messageId}`);
+        const info = await this.transporter.sendMail({
+          from,
+          to,
+          subject,
+          html,
+        });
+        this.logger.log(
+          `OTP email sent to ${to} — messageId: ${info.messageId}`,
+        );
       } catch (err: any) {
-        this.logger.error(`Failed to send OTP email to ${to}: ${err.message}`, err.stack);
+        this.logger.error(
+          `Failed to send OTP email to ${to}: ${err.message}`,
+          err.stack,
+        );
         throw err;
       }
     } else {
