@@ -11,6 +11,7 @@ import { Toaster } from "sonner-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getAuthState } from "@/services/auth";
 import { User } from "@/services/api";
+import { ThemeProvider as AppThemeProvider } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,19 +40,21 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(landlord)" />
-        <Stack.Screen name="(tenant)" />
-        <Stack.Screen name="property/[id]" />
-        <Stack.Screen name="rent/[roomId]" />
-        <Stack.Screen name="rent/history/[roomId]" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <Toaster position="top-center" richColors />
-      <PortalHost />
-    </ThemeProvider>
+    <AppThemeProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(landlord)" />
+          <Stack.Screen name="(tenant)" />
+          <Stack.Screen name="property/[id]" />
+          <Stack.Screen name="rent/[roomId]" />
+          <Stack.Screen name="rent/history/[roomId]" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <Toaster position="top-center" richColors />
+        <PortalHost />
+      </ThemeProvider>
+    </AppThemeProvider>
   );
 }
 

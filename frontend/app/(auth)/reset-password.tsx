@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,37 +13,37 @@ import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { resetPassword } from "@/services/api";
 import { toast } from "sonner-native";
-
-const COLORS = {
-  primary: "#4f46e5",
-  bg: "#ffffff",
-  inputBg: "#f3f4f6",
-  border: "#e5e7eb",
-  text: "#111827",
-  muted: "#6b7280",
-  error: "#ef4444",
-};
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 // 6-box OTP input
-function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function OtpInput({ value, onChange, colors }: { value: string; onChange: (v: string) => void; colors: AppColors }) {
   const inputRef = useRef<TextInput>(null);
   const digits = value.padEnd(6, " ").split("").slice(0, 6);
 
   return (
     <TouchableOpacity activeOpacity={1} onPress={() => inputRef.current?.focus()}>
-      <View style={otp.row}>
+      <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
         {digits.map((d, i) => (
           <View
             key={i}
-            style={[otp.box, value.length === i && otp.boxActive]}
+            style={[
+              {
+                width: 46, height: 54, borderRadius: 10,
+                backgroundColor: colors.inputBg,
+                borderWidth: 1, borderColor: colors.inputBorder,
+                alignItems: "center", justifyContent: "center",
+              },
+              value.length === i && { borderColor: colors.primary, borderWidth: 2 },
+            ]}
           >
-            <Text style={otp.digit}>{d.trim()}</Text>
+            <Text style={{ fontSize: 22, fontWeight: "700", color: colors.text }}>{d.trim()}</Text>
           </View>
         ))}
       </View>
       <TextInput
         ref={inputRef}
-        style={otp.hidden}
+        style={{ position: "absolute", opacity: 0, height: 0 }}
         value={value}
         onChangeText={(v) => onChange(v.replace(/\D/g, "").slice(0, 6))}
         keyboardType="number-pad"
@@ -54,24 +54,10 @@ function OtpInput({ value, onChange }: { value: string; onChange: (v: string) =>
   );
 }
 
-const otp = StyleSheet.create({
-  row: { flexDirection: "row", gap: 10, marginBottom: 24 },
-  box: {
-    width: 46,
-    height: 54,
-    borderRadius: 10,
-    backgroundColor: COLORS.inputBg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  boxActive: { borderColor: COLORS.primary, borderWidth: 2 },
-  digit: { fontSize: 22, fontWeight: "700", color: COLORS.text },
-  hidden: { position: "absolute", opacity: 0, height: 0 },
-});
-
 export default function ResetPasswordScreen() {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -106,34 +92,43 @@ export default function ResetPasswordScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Theme toggle */}
+      <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme}>
+        <MaterialCommunityIcons
+          name={isDark ? "weather-sunny" : "weather-night"}
+          size={20}
+          color={colors.textMuted}
+        />
+      </TouchableOpacity>
+
       <View style={styles.inner}>
         {/* Back */}
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={COLORS.text} />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.iconBox}>
-          <MaterialCommunityIcons name="shield-key-outline" size={32} color={COLORS.primary} />
+          <MaterialCommunityIcons name="shield-key-outline" size={32} color={colors.primary} />
         </View>
 
         <Text style={styles.title}>Enter OTP</Text>
         <Text style={styles.subtitle}>
           We sent a 6-digit OTP to{" "}
-          <Text style={{ fontWeight: "600", color: COLORS.text }}>{email}</Text>.
+          <Text style={{ fontWeight: "600", color: colors.text }}>{email}</Text>.
           {"\n"}Enter it below along with your new password.
         </Text>
 
         {/* OTP boxes */}
         <Text style={styles.label}>One-time password</Text>
-        <OtpInput value={code} onChange={setCode} />
+        <OtpInput value={code} onChange={setCode} colors={colors} />
 
         {/* New password */}
         <Text style={styles.label}>New password</Text>
-        <View style={styles.passwordRow}>
+        <View style={[styles.passwordRow, error ? styles.inputError : null]}>
           <TextInput
-            style={[styles.passwordInput, error ? styles.inputError : null]}
+            style={styles.passwordInput}
             placeholder="Min. 6 characters"
-            placeholderTextColor={COLORS.muted}
+            placeholderTextColor={colors.inputPlaceholder}
             secureTextEntry={!showPassword}
             returnKeyType="done"
             value={newPassword}
@@ -147,7 +142,7 @@ export default function ResetPasswordScreen() {
             <MaterialCommunityIcons
               name={showPassword ? "eye-off-outline" : "eye-outline"}
               size={20}
-              color={COLORS.muted}
+              color={colors.inputPlaceholder}
             />
           </TouchableOpacity>
         </View>
@@ -183,29 +178,30 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (c: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  themeToggle: { position: "absolute", top: 52, right: 24, padding: 8, zIndex: 10 },
   inner: { flex: 1, paddingHorizontal: 28, paddingTop: 60, paddingBottom: 40 },
   back: { marginBottom: 32 },
   iconBox: {
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: "#eef2ff",
+    backgroundColor: c.primaryLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
   },
-  title: { fontSize: 26, fontWeight: "700", color: COLORS.text, marginBottom: 10 },
-  subtitle: { fontSize: 15, color: COLORS.muted, lineHeight: 22, marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: "500", color: COLORS.text, marginBottom: 10 },
+  title: { fontSize: 26, fontWeight: "700", color: c.text, marginBottom: 10 },
+  subtitle: { fontSize: 15, color: c.textSecondary, lineHeight: 22, marginBottom: 32 },
+  label: { fontSize: 14, fontWeight: "500", color: c.text, marginBottom: 10 },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: c.inputBg,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: c.inputBorder,
     marginBottom: 16,
   },
   passwordInput: {
@@ -213,22 +209,22 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: COLORS.text,
+    color: c.inputText,
   },
   eyeBtn: { paddingHorizontal: 14 },
-  inputError: { borderColor: COLORS.error },
+  inputError: { borderColor: c.danger },
   errorBanner: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: c.dangerBgAlt,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: c.dangerBorder,
   },
-  errorText: { color: COLORS.error, fontSize: 14, fontWeight: "500" },
+  errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
   btn: {
     height: 50,
-    backgroundColor: COLORS.primary,
+    backgroundColor: c.primary,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
@@ -237,6 +233,6 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.5 },
   btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   resendLink: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
-  resendText: { color: COLORS.muted, fontSize: 14 },
-  resendAction: { color: COLORS.primary, fontSize: 14, fontWeight: "600" },
+  resendText: { color: c.textSecondary, fontSize: 14 },
+  resendAction: { color: c.primary, fontSize: 14, fontWeight: "600" },
 });

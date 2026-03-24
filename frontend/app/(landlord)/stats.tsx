@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react";
+import Logo from "@/assets/images/logo.svg";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,20 +8,27 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getProperties, getRooms, getMonthlyRent, Property, MonthlyRentResult } from "@/services/api";
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 interface Stats {
   totalProperties: number;
   totalRooms: number;
   occupiedRooms: number;
+  paidCount: number;
   collected: number;
   pending: number;
 }
 
 export default function StatsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -39,6 +47,7 @@ export default function StatsScreen() {
       let occupiedRooms = 0;
       let collected = 0;
       let pending = 0;
+      let paidCount = 0;
 
       for (const prop of props ?? []) {
         const rooms = await getRooms(prop.id);
@@ -47,10 +56,11 @@ export default function StatsScreen() {
 
         const monthly: MonthlyRentResult[] = await getMonthlyRent(prop.id, month, year);
         for (const r of monthly) {
-          if (r.rent_record.status === "PAID") {
+          if (r.rent_record?.status === "PAID") {
             collected += r.rent_record.total;
-          } else {
-            pending += r.rent_record.total;
+            paidCount++;
+          } else if (r.rent_record) {
+            pending += r.rent_record.total - (r.rent_record.paid_amount ?? 0);
           }
         }
       }
@@ -59,6 +69,7 @@ export default function StatsScreen() {
         totalProperties: props?.length ?? 0,
         totalRooms,
         occupiedRooms,
+        paidCount,
         collected,
         pending,
       });
@@ -77,12 +88,17 @@ export default function StatsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Rent Manager</Text>
+        <View style={styles.logoRow}>
+          <View style={[styles.logoWrap, { backgroundColor: colors.primary }]}>
+            <Logo width={18} height={18} />
+          </View>
+          <Text style={styles.logoText}>RentoRoll</Text>
+        </View>
         <Text style={styles.headerSub}>{monthName} {year}</Text>
       </View>
 
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 60 }} color="#4f46e5" />
+        <ActivityIndicator style={{ marginTop: 60 }} color={colors.primary} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}
@@ -90,53 +106,43 @@ export default function StatsScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />
           }
         >
+          {/* Monthly Overview gradient card */}
+          {stats && (
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.overviewCard}
+            >
+              <Text style={styles.overviewLabel}>MONTHLY OVERVIEW</Text>
+              <Text style={styles.overviewAmount}>
+                ₹{stats.collected.toLocaleString("en-IN")}
+              </Text>
+              <Text style={styles.overviewSub}>
+                {stats.paidCount} of {stats.totalRooms} units paid · ₹{stats.pending.toLocaleString("en-IN")} pending
+              </Text>
+            </LinearGradient>
+          )}
+
           {/* Stats grid */}
           {stats && (
             <View style={styles.statsGrid}>
-              <StatCard
-                icon="office-building-outline"
-                label="Properties"
-                value={stats.totalProperties}
-                color="#6366f1"
-              />
-              <StatCard
-                icon="door-open"
-                label="Total Rooms"
-                value={stats.totalRooms}
-                color="#0ea5e9"
-              />
-              <StatCard
-                icon="currency-inr"
-                label="Collected"
-                value={`₹${stats.collected.toLocaleString("en-IN")}`}
-                color="#10b981"
-              />
-              <StatCard
-                icon="clock-alert-outline"
-                label="Pending"
-                value={`₹${stats.pending.toLocaleString("en-IN")}`}
-                color="#f59e0b"
-              />
-              <StatCard
-                icon="account-group-outline"
-                label="Occupied"
-                value={stats.occupiedRooms}
-                color="#8b5cf6"
-              />
-              <StatCard
-                icon="home-remove-outline"
-                label="Vacant"
-                value={stats.totalRooms - stats.occupiedRooms}
-                color="#ec4899"
-              />
+              <StatCard icon="office-building-outline" label="Properties" value={stats.totalProperties} color={colors.blueAlt} />
+              <StatCard icon="door-open" label="Total Rooms" value={stats.totalRooms} color={colors.blue} />
+              <StatCard icon="currency-inr" label="Collected" value={`₹${stats.collected.toLocaleString("en-IN")}`} color={colors.success} />
+              <StatCard icon="clock-alert-outline" label="Pending" value={`₹${stats.pending.toLocaleString("en-IN")}`} color={colors.warning} />
+              <StatCard icon="account-group-outline" label="Occupied" value={stats.occupiedRooms} color={colors.primary} />
+              <StatCard icon="home-remove-outline" label="Vacant" value={stats.totalRooms - stats.occupiedRooms} color={colors.danger} />
             </View>
           )}
 
           {/* Property list */}
-          <Text style={styles.sectionTitle}>Properties</Text>
+          <Text style={styles.sectionTitle}>PROPERTIES</Text>
           {properties.map((p) => (
             <View key={p.id} style={styles.propRow}>
-              <MaterialCommunityIcons name="office-building-outline" size={20} color="#4f46e5" />
+              <View style={styles.propIcon}>
+                <MaterialCommunityIcons name="office-building-outline" size={18} color={colors.primary} />
+              </View>
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <Text style={styles.propName}>{p.name}</Text>
                 <Text style={styles.propAddr}>{p.address}</Text>
@@ -150,6 +156,8 @@ export default function StatsScreen() {
 }
 
 function StatCard({ icon, label, value, color }: { icon: any; label: string; value: any; color: string }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={[styles.statCard, { borderLeftColor: color }]}>
       <MaterialCommunityIcons name={icon} size={22} color={color} />
@@ -159,19 +167,40 @@ function StatCard({ icon, label, value, color }: { icon: any; label: string; val
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f9fafb" },
+const createStyles = (c: AppColors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
-    backgroundColor: "#fff",
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: c.border,
   },
-  headerTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
-  headerSub: { fontSize: 13, color: "#6b7280", marginTop: 2 },
-  content: { padding: 16 },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoWrap: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  logoText: { fontSize: 20, fontWeight: "800", color: c.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
+  content: { padding: 16, paddingBottom: 32 },
+  overviewCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  overviewLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.7)",
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  overviewAmount: { fontSize: 32, fontWeight: "800", color: "#fff" },
+  overviewSub: { fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 4 },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -180,7 +209,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: "47%",
-    backgroundColor: "#fff",
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 14,
     borderLeftWidth: 4,
@@ -190,24 +219,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  statValue: { fontSize: 22, fontWeight: "700", color: "#111827", marginTop: 8 },
-  statLabel: { fontSize: 12, color: "#6b7280", marginTop: 4 },
+  statValue: { fontSize: 22, fontWeight: "700", color: c.text, marginTop: 8 },
+  statLabel: { fontSize: 12, color: c.textSecondary, marginTop: 4 },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
+    fontSize: 11,
+    fontWeight: "700",
+    color: c.textMuted,
+    letterSpacing: 1,
     marginBottom: 12,
   },
   propRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: c.surface,
+    borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: c.border,
   },
-  propName: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  propAddr: { fontSize: 12, color: "#9ca3af", marginTop: 2 },
+  propIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: c.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  propName: { fontSize: 15, fontWeight: "600", color: c.text },
+  propAddr: { fontSize: 12, color: c.textMuted, marginTop: 2 },
 });

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import Logo from "@/assets/images/logo.svg";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,34 +7,28 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
 import { router, Link } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { signUp } from "@/services/auth";
 import { Role } from "@/services/api";
-
-const COLORS = {
-  primary: "#4f46e5",
-  bg: "#ffffff",
-  inputBg: "#f3f4f6",
-  border: "#e5e7eb",
-  text: "#111827",
-  muted: "#6b7280",
-  error: "#ef4444",
-  tabActive: "#4f46e5",
-  tabInactive: "#9ca3af",
-};
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 export default function SignupScreen() {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [role, setRole] = useState<Role>("tenant");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,7 +49,7 @@ export default function SignupScreen() {
     setLoading(true);
     try {
       const { user } = await signUp(name.trim(), email.trim(), password, role, phone.trim() || undefined);
-      if (user.role === "landlord") {
+      if (user?.role === "landlord") {
         router.replace("/(landlord)");
       } else {
         router.replace("/(tenant)");
@@ -68,19 +63,27 @@ export default function SignupScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: COLORS.bg }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Theme toggle */}
+      <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme}>
+        <MaterialCommunityIcons
+          name={isDark ? "weather-sunny" : "weather-night"}
+          size={20}
+          color={colors.textMuted}
+        />
+      </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={styles.logoRow}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>R</Text>
+        {/* Logo */}
+        <View style={styles.logoWrap}>
+          <View style={styles.logoBox}>
+            <Logo width={28} height={28} />
           </View>
           <Text style={styles.appName}>RentoRoll</Text>
+          <Text style={styles.tagline}>Create your account</Text>
         </View>
-
-        <Text style={styles.title}>Create your account</Text>
 
         {/* Role toggle */}
         <View style={styles.roleToggle}>
@@ -102,24 +105,25 @@ export default function SignupScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Fields */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Full Name</Text>
+        {/* Full Name */}
+        <View style={styles.inputRow}>
+          <MaterialCommunityIcons name="account-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Enter your full name"
-            placeholderTextColor={COLORS.muted}
+            placeholder="Full name"
+            placeholderTextColor={colors.inputPlaceholder}
             value={name}
             onChangeText={(v) => { setName(v); setError(""); }}
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email Address</Text>
+        {/* Email */}
+        <View style={styles.inputRow}>
+          <MaterialCommunityIcons name="email-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Enter your email address"
-            placeholderTextColor={COLORS.muted}
+            placeholder="Email address"
+            placeholderTextColor={colors.inputPlaceholder}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
@@ -127,37 +131,47 @@ export default function SignupScreen() {
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Phone (optional, for rent notifications)</Text>
+        {/* Phone */}
+        <View style={styles.inputRow}>
+          <MaterialCommunityIcons name="phone-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="+91 9876543210"
-            placeholderTextColor={COLORS.muted}
+            placeholder="Phone (optional)"
+            placeholderTextColor={colors.inputPlaceholder}
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
+        {/* Password */}
+        <View style={styles.inputRow}>
+          <MaterialCommunityIcons name="lock-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor={COLORS.muted}
-            secureTextEntry
+            placeholder="Password"
+            placeholderTextColor={colors.inputPlaceholder}
+            secureTextEntry={!showPass}
             value={password}
             onChangeText={(v) => { setPassword(v); setError(""); }}
           />
+          <TouchableOpacity onPress={() => setShowPass((p) => !p)} style={styles.eyeBtn}>
+            <MaterialCommunityIcons
+              name={showPass ? "eye-off-outline" : "eye-outline"}
+              size={18}
+              color={colors.inputPlaceholder}
+            />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Confirm Password</Text>
+        {/* Confirm Password */}
+        <View style={styles.inputRow}>
+          <MaterialCommunityIcons name="lock-check-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Confirm your password"
-            placeholderTextColor={COLORS.muted}
-            secureTextEntry
+            placeholder="Confirm password"
+            placeholderTextColor={colors.inputPlaceholder}
+            secureTextEntry={!showPass}
             value={confirmPassword}
             onChangeText={(v) => { setConfirmPassword(v); setError(""); }}
           />
@@ -173,12 +187,12 @@ export default function SignupScreen() {
           style={[styles.btn, loading && styles.btnDisabled]}
           onPress={handleSignup}
           disabled={loading}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Create Account</Text>
+            <Text style={styles.btnText}>Create Account  →</Text>
           )}
         </TouchableOpacity>
 
@@ -195,92 +209,90 @@ export default function SignupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (c: AppColors) => StyleSheet.create({
   container: {
     paddingHorizontal: 28,
     paddingTop: 60,
     paddingBottom: 40,
-    backgroundColor: COLORS.bg,
+    backgroundColor: c.background,
   },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  logoCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
+  themeToggle: { position: "absolute", top: 52, right: 24, padding: 8, zIndex: 10 },
+  logoWrap: { alignItems: "center", marginBottom: 32 },
+  logoBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    backgroundColor: c.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    marginBottom: 10,
+    shadowColor: c.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  logoText: { color: "#fff", fontSize: 20, fontWeight: "700" },
-  appName: { fontSize: 22, fontWeight: "700", color: COLORS.text },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 20,
-  },
+  appName: { fontSize: 20, fontWeight: "700", color: c.text, marginBottom: 2 },
+  tagline: { fontSize: 13, color: c.textSecondary },
   roleToggle: {
     flexDirection: "row",
-    backgroundColor: COLORS.inputBg,
-    borderRadius: 10,
+    backgroundColor: c.primaryMuted,
+    borderRadius: 12,
     padding: 4,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   roleBtn: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: 10,
   },
-  roleBtnActive: { backgroundColor: COLORS.primary },
-  roleBtnText: { fontSize: 14, fontWeight: "600", color: COLORS.muted },
+  roleBtnActive: { backgroundColor: c.primary },
+  roleBtnText: { fontSize: 14, fontWeight: "600", color: c.textSecondary },
   roleBtnTextActive: { color: "#fff" },
-  inputGroup: { marginBottom: 16 },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: COLORS.text,
-    marginBottom: 6,
-  },
-  input: {
-    height: 50,
-    backgroundColor: COLORS.inputBg,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: COLORS.text,
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: c.surface,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: c.border,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    height: 52,
   },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: c.inputText },
+  eyeBtn: { padding: 4 },
   errorBanner: {
-    backgroundColor: "#fef2f2",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-  },
-  errorText: { color: COLORS.error, fontSize: 14, fontWeight: "500" },
-  btn: {
-    height: 50,
-    backgroundColor: COLORS.primary,
+    backgroundColor: c.dangerBgAlt,
     borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: c.dangerBorder,
+  },
+  errorText: { color: c.danger, fontSize: 13, fontWeight: "500" },
+  btn: {
+    height: 52,
+    backgroundColor: c.primary,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 4,
+    shadowColor: c.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  btnText: { color: "#fff", fontSize: 16, fontWeight: "700", letterSpacing: 0.3 },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 24,
   },
-  footerText: { color: COLORS.muted, fontSize: 14 },
-  link: { color: COLORS.primary, fontSize: 14, fontWeight: "600" },
+  footerText: { color: c.textSecondary, fontSize: 14 },
+  link: { color: c.primary, fontSize: 14, fontWeight: "600" },
 });

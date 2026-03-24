@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -12,18 +12,13 @@ import {
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { forgotPassword } from "@/services/api";
-
-const COLORS = {
-  primary: "#4f46e5",
-  bg: "#ffffff",
-  inputBg: "#f3f4f6",
-  border: "#e5e7eb",
-  text: "#111827",
-  muted: "#6b7280",
-  error: "#ef4444",
-};
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 export default function ForgotPasswordScreen() {
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,15 +48,24 @@ export default function ForgotPasswordScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Theme toggle */}
+      <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme}>
+        <MaterialCommunityIcons
+          name={isDark ? "weather-sunny" : "weather-night"}
+          size={20}
+          color={colors.textMuted}
+        />
+      </TouchableOpacity>
+
       <View style={styles.inner}>
         {/* Back */}
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={COLORS.text} />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.text} />
         </TouchableOpacity>
 
         {/* Icon */}
         <View style={styles.iconBox}>
-          <MaterialCommunityIcons name="lock-reset" size={32} color={COLORS.primary} />
+          <MaterialCommunityIcons name="lock-reset" size={32} color={colors.primary} />
         </View>
 
         <Text style={styles.title}>Forgot password?</Text>
@@ -73,7 +77,7 @@ export default function ForgotPasswordScreen() {
         <TextInput
           style={[styles.input, error ? styles.inputError : null]}
           placeholder="name@example.com"
-          placeholderTextColor={COLORS.muted}
+          placeholderTextColor={colors.inputPlaceholder}
           autoCapitalize="none"
           keyboardType="email-address"
           returnKeyType="done"
@@ -109,51 +113,52 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (c: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  themeToggle: { position: "absolute", top: 52, right: 24, padding: 8, zIndex: 10 },
   inner: { flex: 1, paddingHorizontal: 28, paddingTop: 60, paddingBottom: 40 },
   back: { marginBottom: 32 },
   iconBox: {
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: "#eef2ff",
+    backgroundColor: c.primaryLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
   },
-  title: { fontSize: 26, fontWeight: "700", color: COLORS.text, marginBottom: 10 },
+  title: { fontSize: 26, fontWeight: "700", color: c.text, marginBottom: 10 },
   subtitle: {
     fontSize: 15,
-    color: COLORS.muted,
+    color: c.textSecondary,
     lineHeight: 22,
     marginBottom: 32,
   },
-  label: { fontSize: 14, fontWeight: "500", color: COLORS.text, marginBottom: 6 },
+  label: { fontSize: 14, fontWeight: "500", color: c.text, marginBottom: 6 },
   input: {
     height: 50,
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: c.inputBg,
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: COLORS.text,
+    color: c.inputText,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: c.inputBorder,
     marginBottom: 16,
   },
-  inputError: { borderColor: COLORS.error },
+  inputError: { borderColor: c.danger },
   errorBanner: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: c.dangerBgAlt,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: c.dangerBorder,
   },
-  errorText: { color: COLORS.error, fontSize: 14, fontWeight: "500" },
+  errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
   btn: {
     height: 50,
-    backgroundColor: COLORS.primary,
+    backgroundColor: c.primary,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
@@ -162,5 +167,5 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   backLink: { alignItems: "center", marginTop: 24 },
-  backLinkText: { color: COLORS.primary, fontSize: 14, fontWeight: "600" },
+  backLinkText: { color: c.primary, fontSize: 14, fontWeight: "600" },
 });

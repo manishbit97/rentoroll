@@ -1,31 +1,35 @@
-import { TabBarAntIcon, TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
+import { TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Tabs } from "expo-router";
 
 export default function LandlordLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#4f46e5",
+        tabBarActiveTintColor: colors.tabBarActive,
+        tabBarInactiveTintColor: colors.tabBarInactive,
         headerShown: false,
         tabBarStyle: {
-          borderTopWidth: 0,
-          borderTopColor: "#e5e7eb",
+          backgroundColor: colors.tabBarBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Properties",
+          title: "Home",
           tabBarIcon: ({ color }) => (
-            <TabBarAntIcon name="home" color={color} size={22} />
+            <TabBarMaterialIcon name="home" color={color} size={22} />
           ),
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Dashboard",
+          title: "Analytics",
           tabBarIcon: ({ color }) => (
             <TabBarMaterialIcon name="chart-bar" color={color} size={22} />
           ),
@@ -34,9 +38,9 @@ export default function LandlordLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: "Profile",
           tabBarIcon: ({ color }) => (
-            <TabBarAntIcon name="setting" color={color} size={22} />
+            <TabBarMaterialIcon name="account-circle" color={color} size={22} />
           ),
         }}
       />

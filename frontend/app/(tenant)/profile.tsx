@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -14,8 +14,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 export default function TenantProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [signOutOpen, setSignOutOpen] = useState(false);
 
   return (
@@ -32,16 +36,16 @@ export default function TenantProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <RowItem icon="account-outline" label="Edit Profile" />
-        <RowItem icon="bell-outline" label="Notifications" />
-        <RowItem icon="help-circle-outline" label="Help & Support" />
+        <RowItem icon="account-outline" label="Edit Profile" colors={colors} />
+        <RowItem icon="bell-outline" label="Notifications" colors={colors} />
+        <RowItem icon="help-circle-outline" label="Help & Support" colors={colors} />
       </View>
 
       <TouchableOpacity
         style={styles.signOutRow}
         onPress={() => setSignOutOpen(true)}
       >
-        <MaterialCommunityIcons name="logout" size={20} color="#ef4444" />
+        <MaterialCommunityIcons name="logout" size={20} color={colors.danger} />
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
@@ -71,68 +75,58 @@ export default function TenantProfileScreen() {
   );
 }
 
-function RowItem({ icon, label }: { icon: any; label: string }) {
+function RowItem({ icon, label, colors }: { icon: any; label: string; colors: AppColors }) {
   return (
-    <TouchableOpacity style={styles.row}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={20}
-        color="#4f46e5"
-        style={{ marginRight: 14 }}
-      />
-      <Text style={styles.rowLabel}>{label}</Text>
-      <MaterialCommunityIcons name="chevron-right" size={20} color="#9ca3af" />
+    <TouchableOpacity style={{
+      flexDirection: "row", alignItems: "center",
+      padding: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight,
+    }}>
+      <MaterialCommunityIcons name={icon} size={20} color={colors.primary} style={{ marginRight: 14 }} />
+      <Text style={{ flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" }}>{label}</Text>
+      <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f9fafb" },
+const createStyles = (c: AppColors) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#fff",
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: c.border,
   },
-  title: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  title: { fontSize: 22, fontWeight: "700", color: c.text },
   avatarSection: { alignItems: "center", paddingVertical: 28 },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#4f46e5",
+    backgroundColor: c.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
   },
-  role: { fontSize: 14, color: "#6b7280", fontWeight: "500" },
+  role: { fontSize: 14, color: c.textSecondary, fontWeight: "500" },
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: c.surface,
     borderRadius: 12,
     margin: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: c.border,
     overflow: "hidden",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  rowLabel: { flex: 1, fontSize: 15, color: "#111827", fontWeight: "500" },
   signOutRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: c.surface,
     borderRadius: 12,
     marginHorizontal: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: c.dangerBorder,
     gap: 12,
   },
-  signOutText: { fontSize: 15, fontWeight: "600", color: "#ef4444" },
+  signOutText: { fontSize: 15, fontWeight: "600", color: c.danger },
 });

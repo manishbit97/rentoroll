@@ -2,6 +2,8 @@ import * as AlertDialogPrimitive from "@rn-primitives/alert-dialog";
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 const AlertDialog = AlertDialogPrimitive.Root;
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
@@ -10,15 +12,19 @@ function AlertDialogContent({
   children,
   ...props
 }: AlertDialogPrimitive.ContentProps) {
+  const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Portal>
       <AlertDialogPrimitive.Overlay asChild>
         <Animated.View
           entering={FadeIn.duration(150)}
           exiting={FadeOut.duration(150)}
-          style={styles.overlay}
+          style={[styles.overlay]}
         >
-          <AlertDialogPrimitive.Content style={styles.content} {...props}>
+          <AlertDialogPrimitive.Content
+            style={StyleSheet.flatten([styles.content, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }])}
+            {...props}
+          >
             {children}
           </AlertDialogPrimitive.Content>
         </Animated.View>
@@ -36,9 +42,10 @@ function AlertDialogFooter({ children }: { children: React.ReactNode }) {
 }
 
 function AlertDialogTitle({ children }: AlertDialogPrimitive.TitleProps) {
+  const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Title>
-      <Text style={styles.title}>{children}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{children}</Text>
     </AlertDialogPrimitive.Title>
   );
 }
@@ -46,9 +53,10 @@ function AlertDialogTitle({ children }: AlertDialogPrimitive.TitleProps) {
 function AlertDialogDescription({
   children,
 }: AlertDialogPrimitive.DescriptionProps) {
+  const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Description>
-      <Text style={styles.description}>{children}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>{children}</Text>
     </AlertDialogPrimitive.Description>
   );
 }
@@ -59,13 +67,14 @@ function AlertDialogAction({
   onPress,
   ...props
 }: AlertDialogPrimitive.ActionProps & { destructive?: boolean }) {
+  const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Action asChild {...props}>
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [
           styles.actionBtn,
-          destructive && styles.destructiveBtn,
+          { backgroundColor: destructive ? colors.danger : colors.primary },
           pressed && styles.pressed,
         ]}
       >
@@ -80,13 +89,18 @@ function AlertDialogCancel({
   onPress,
   ...props
 }: AlertDialogPrimitive.CancelProps) {
+  const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Cancel asChild {...props}>
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.cancelBtn, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.cancelBtn,
+          { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+          pressed && styles.pressed,
+        ]}
       >
-        <Text style={styles.cancelText}>{children as string}</Text>
+        <Text style={[styles.cancelText, { color: colors.textBody }]}>{children as string}</Text>
       </Pressable>
     </AlertDialogPrimitive.Cancel>
   );
@@ -115,7 +129,6 @@ const styles = StyleSheet.create({
   content: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     shadowColor: "#000",
@@ -131,24 +144,20 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 20,
   },
-  title: { fontSize: 17, fontWeight: "700", color: "#111827", marginBottom: 6 },
-  description: { fontSize: 14, color: "#6b7280", lineHeight: 21 },
+  title: { fontSize: 17, fontWeight: "700", marginBottom: 6 },
+  description: { fontSize: 14, lineHeight: 21 },
   actionBtn: {
-    backgroundColor: "#4f46e5",
     borderRadius: 8,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  destructiveBtn: { backgroundColor: "#ef4444" },
   actionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   cancelBtn: {
     borderRadius: 8,
     paddingHorizontal: 18,
     paddingVertical: 10,
-    backgroundColor: "#f3f4f6",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
   },
-  cancelText: { color: "#374151", fontSize: 14, fontWeight: "500" },
+  cancelText: { fontSize: 14, fontWeight: "500" },
   pressed: { opacity: 0.75 },
 });

@@ -1,24 +1,27 @@
+import { TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Tabs } from "expo-router";
-import { TabBarAntIcon, TabBarMaterialIcon } from "@/components/navigation/TabBarIcon";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TenantLayout() {
-  const colorScheme = useColorScheme();
-
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: colors.tabBarActive,
+        tabBarInactiveTintColor: colors.tabBarInactive,
         headerShown: false,
-        tabBarStyle: { borderTopWidth: 1, borderTopColor: "#e5e7eb" },
+        tabBarStyle: {
+          backgroundColor: colors.tabBarBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "My Rent",
-          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="home-outline" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="home-account" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -32,7 +35,7 @@ export default function TenantLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <TabBarAntIcon name="user" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="account-circle" color={color} />,
         }}
       />
     </Tabs>

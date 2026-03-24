@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
 import { router } from "expo-router";
 import { Property } from "@/services/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import InitialsAvatar from "@/components/ui/InitialsAvatar";
+import { useTheme } from "@/contexts/ThemeContext";
+import { AppColors } from "@/theme/colors";
 
 interface Props {
   property: Property;
@@ -19,6 +22,9 @@ interface Props {
 }
 
 export default function PropertyCard({ property, onEdit, onDelete }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const handleOptions = () => {
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -69,51 +75,67 @@ export default function PropertyCard({ property, onEdit, onDelete }: Props) {
       activeOpacity={0.7}
       onPress={() => router.push(`/property/${property.id}`)}
     >
-      <View style={styles.iconBox}>
-        <MaterialCommunityIcons name="office-building-outline" size={26} color="#4f46e5" />
+      {/* Top row */}
+      <View style={styles.topRow}>
+        <InitialsAvatar name={property.name} size={44} />
+        <View style={styles.body}>
+          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+            {property.name}
+          </Text>
+          <View style={styles.addressRow}>
+            <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.textMuted} />
+            <Text style={styles.address} numberOfLines={1}>
+              {property.address || "No address set"}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          onPress={handleOptions}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textMuted} />
+        </TouchableOpacity>
       </View>
-      <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{property.name}</Text>
-        <Text style={styles.address} numberOfLines={1}>
-          {property.address || "No address set"}
-        </Text>
+
+      {/* Footer arrow */}
+      <View style={styles.footer}>
+        <Text style={styles.footerLink}>View rooms</Text>
+        <MaterialCommunityIcons name="chevron-right" size={16} color={colors.primary} />
       </View>
-      <TouchableOpacity
-        onPress={handleOptions}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <MaterialCommunityIcons name="dots-vertical" size={22} color="#9ca3af" />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (c: AppColors) => StyleSheet.create({
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: c.surface,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: c.border,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 2,
   },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: "#eef2ff",
+  topRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
+    gap: 12,
+    marginBottom: 12,
   },
   body: { flex: 1 },
-  name: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  address: { fontSize: 13, color: "#6b7280", marginTop: 2 },
+  name: { fontSize: 16, fontWeight: "700", color: c.text, marginBottom: 3 },
+  addressRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  address: { fontSize: 12, color: c.textMuted, flex: 1 },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: c.borderLight,
+    paddingTop: 10,
+  },
+  footerLink: { flex: 1, fontSize: 13, fontWeight: "600", color: c.primary },
 });
