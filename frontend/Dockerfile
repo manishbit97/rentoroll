@@ -1,7 +1,13 @@
-FROM node:20-alpine AS build
+FROM node:20-slim AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && \
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+      npm install --no-save lightningcss-linux-arm64-gnu; \
+    else \
+      npm install --no-save lightningcss-linux-x64-gnu; \
+    fi
 COPY . .
 RUN EXPO_PUBLIC_API_URL=https://rentoz.online npx expo export --platform web
 
