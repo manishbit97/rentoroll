@@ -36,6 +36,15 @@ export default function LandlordLayout() {
         }}
       />
       <Tabs.Screen
+        name="tenants"
+        options={{
+          title: "Tenants",
+          tabBarIcon: ({ color }) => (
+            <TabBarMaterialIcon name="account-group" color={color} size={22} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: "Profile",

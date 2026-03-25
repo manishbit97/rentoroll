@@ -1,11 +1,16 @@
 import RoomCard from "@/components/rooms/RoomCard";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
+  addCoLandlord,
   createRoom,
+  getCoLandlords,
   getMonthlyRent,
   getProperty,
   MonthlyRentResult,
   Property,
+  removeCoLandlord,
+  searchLandlord,
+  TenantSearchResult,
 } from "@/services/api";
 import { AppColors } from "@/theme/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -78,6 +83,15 @@ export default function PropertyDetailScreen() {
   const [roomName, setRoomName] = useState("");
   const [baseRent, setBaseRent] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Co-landlord modal
+  const [coModal, setCoModal] = useState(false);
+  const [coLandlords, setCoLandlords] = useState<TenantSearchResult[]>([]);
+  const [coEmail, setCoEmail] = useState("");
+  const [coSearchResult, setCoSearchResult] = useState<TenantSearchResult | null>(null);
+  const [coSearching, setCoSearching] = useState(false);
+  const [coAdding, setCoAdding] = useState(false);
+  const [coError, setCoError] = useState("");
 
   // ── Aurora stats bar animation ──────────────────────────────────────────────
   const sa1 = useRef(new Animated.Value(0.3)).current;
@@ -220,6 +234,60 @@ export default function PropertyDetailScreen() {
     }
   };
 
+  const openCoModal = async () => {
+    setCoModal(true);
+    setCoEmail("");
+    setCoSearchResult(null);
+    setCoError("");
+    try {
+      const list = await getCoLandlords(id!);
+      setCoLandlords(list);
+    } catch {
+      setCoLandlords([]);
+    }
+  };
+
+  const handleCoSearch = async () => {
+    if (!coEmail.trim()) return;
+    setCoSearching(true);
+    setCoSearchResult(null);
+    setCoError("");
+    try {
+      const result = await searchLandlord(coEmail.trim());
+      setCoSearchResult(result);
+    } catch (e: any) {
+      setCoError(e.message ?? "Landlord not found");
+    } finally {
+      setCoSearching(false);
+    }
+  };
+
+  const handleCoAdd = async () => {
+    if (!coSearchResult) return;
+    setCoAdding(true);
+    try {
+      const added = await addCoLandlord(id!, coEmail.trim());
+      setCoLandlords((prev) => [...prev, added]);
+      setCoSearchResult(null);
+      setCoEmail("");
+      toast.success(`${added.name} added as co-manager`);
+    } catch (e: any) {
+      setCoError(e.message);
+    } finally {
+      setCoAdding(false);
+    }
+  };
+
+  const handleCoRemove = async (userId: string) => {
+    try {
+      await removeCoLandlord(id!, userId);
+      setCoLandlords((prev) => prev.filter((c) => c.id !== userId));
+      toast.success("Co-manager removed");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
@@ -242,6 +310,13 @@ export default function PropertyDetailScreen() {
             {property?.address || "Property Overview"}
           </Text>
         </View>
+        <TouchableOpacity onPress={openCoModal} style={{ marginRight: 12 }}>
+          <MaterialCommunityIcons
+            name="account-multiple-plus-outline"
+            size={24}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => setAddModal(true)}>
           <MaterialCommunityIcons
             name="plus-circle-outline"
@@ -442,6 +517,90 @@ export default function PropertyDetailScreen() {
         </ScrollView>
       )}
 
+      {/* Co-Landlord Modal */}
+      <Modal visible={coModal} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalSafe}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Co-managers</Text>
+            <TouchableOpacity onPress={() => setCoModal(false)}>
+              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.modalBody}>
+            {/* Search row */}
+            <Text style={styles.label}>Add by email</Text>
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                placeholder="landlord@example.com"
+                placeholderTextColor={colors.inputPlaceholder}
+                value={coEmail}
+                onChangeText={(t) => { setCoEmail(t); setCoSearchResult(null); setCoError(""); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={[styles.saveBtn, { paddingHorizontal: 16, marginTop: 0 }, coSearching && { opacity: 0.6 }]}
+                onPress={handleCoSearch}
+                disabled={coSearching}
+              >
+                {coSearching
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <MaterialCommunityIcons name="magnify" size={20} color="#fff" />}
+              </TouchableOpacity>
+            </View>
+
+            {/* Error */}
+            {!!coError && (
+              <View style={styles.coErrorBanner}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={14} color={colors.danger} />
+                <Text style={styles.coErrorText}>{coError}</Text>
+              </View>
+            )}
+
+            {/* Found landlord preview */}
+            {coSearchResult && (
+              <View style={styles.coFoundCard}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.coFoundName}>{coSearchResult.name}</Text>
+                  <Text style={styles.coFoundEmail}>{coSearchResult.email}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.saveBtn, { paddingHorizontal: 16, marginTop: 0 }, coAdding && { opacity: 0.6 }]}
+                  onPress={handleCoAdd}
+                  disabled={coAdding}
+                >
+                  {coAdding
+                    ? <ActivityIndicator color="#fff" size="small" />
+                    : <Text style={styles.saveBtnText}>Add</Text>}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Current co-landlords list */}
+            {coLandlords.length > 0 && (
+              <>
+                <Text style={[styles.label, { marginTop: 20 }]}>Current co-managers</Text>
+                {coLandlords.map((c) => (
+                  <View key={c.id} style={styles.coRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.coFoundName}>{c.name}</Text>
+                      <Text style={styles.coFoundEmail}>{c.email}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleCoRemove(c.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <MaterialCommunityIcons name="close-circle-outline" size={22} color={colors.danger} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
+            {coLandlords.length === 0 && !coSearchResult && (
+              <Text style={styles.coEmpty}>No co-managers yet. Search above to add one.</Text>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
       {/* Add Room Modal */}
       <Modal
         visible={addModal}
@@ -639,4 +798,37 @@ const createStyles = (c: AppColors) =>
       marginTop: 28,
     },
     saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    coErrorBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: c.dangerBg,
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 10,
+    },
+    coErrorText: { fontSize: 13, color: c.danger, flex: 1 },
+    coFoundCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.successBg,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 10,
+      gap: 10,
+    },
+    coRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.surface,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+      gap: 10,
+    },
+    coFoundName: { fontSize: 14, fontWeight: "700", color: c.text },
+    coFoundEmail: { fontSize: 12, color: c.textSecondary, marginTop: 1 },
+    coEmpty: { fontSize: 13, color: c.textMuted, textAlign: "center", marginTop: 16 },
   });

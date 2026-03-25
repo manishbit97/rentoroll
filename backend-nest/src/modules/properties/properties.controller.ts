@@ -59,6 +59,30 @@ export class PropertiesController {
     return this.propertiesService.delete(id, user.user_id);
   }
 
+  // Co-landlord management (primary owner only)
+  @Get(':id/co-landlords')
+  getCoLandlords(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.propertiesService.getCoLandlords(id, user.user_id);
+  }
+
+  @Post(':id/co-landlords')
+  addCoLandlord(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Body('email') email: string,
+  ) {
+    return this.propertiesService.addCoLandlord(id, user.user_id, email);
+  }
+
+  @Delete(':id/co-landlords/:userId')
+  removeCoLandlord(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.propertiesService.removeCoLandlord(id, user.user_id, userId);
+  }
+
   // Nested rooms routes under /properties/:propertyId/rooms
   @Get(':propertyId/rooms')
   listRooms(

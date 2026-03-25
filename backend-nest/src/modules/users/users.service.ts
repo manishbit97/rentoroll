@@ -9,9 +9,10 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async searchByEmail(email: string) {
-    const user = await this.userModel.findOne({ email, role: 'tenant' });
-    if (!user) throw new NotFoundException('Tenant not found');
+  async searchByEmail(email: string, role: 'tenant' | 'landlord' = 'tenant') {
+    const label = role === 'landlord' ? 'Landlord' : 'Tenant';
+    const user = await this.userModel.findOne({ email, role });
+    if (!user) throw new NotFoundException(`${label} not found`);
     return { id: user._id.toString(), name: user.name, email: user.email };
   }
 }

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   Post,
@@ -9,9 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { JwtAuthGuard, JwtPayload } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { AssignTenantDto } from './dto/assign-tenant.dto';
@@ -25,6 +27,11 @@ import { SetVacatingDateDto } from './dto/set-vacating-date.dto';
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
+
+  @Get('my-tenants')
+  getMyTenants(@CurrentUser() user: JwtPayload) {
+    return this.roomsService.getTenantsForLandlord(user.user_id);
+  }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: CreateRoomDto) {

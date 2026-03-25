@@ -36,10 +36,18 @@ export class RoomsService {
     private readonly rentModel: Model<RentRecordDocument>,
   ) {}
 
+  private isLandlordOfProperty(property: PropertyDocument, landlordId: string): boolean {
+    const isPrimary = property.landlord_id.toString() === landlordId;
+    const isCoLandlord = property.co_landlord_ids?.some(
+      (id) => id.toString() === landlordId,
+    );
+    return isPrimary || isCoLandlord;
+  }
+
   async listByProperty(propertyId: string, landlordId: string) {
     const property = await this.propertyModel.findById(propertyId);
     if (!property) throw new NotFoundException('Property not found');
-    if (property.landlord_id.toString() !== landlordId) {
+    if (!this.isLandlordOfProperty(property, landlordId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -71,7 +79,7 @@ export class RoomsService {
   async create(propertyId: string, landlordId: string, dto: CreateRoomDto) {
     const property = await this.propertyModel.findById(propertyId);
     if (!property) throw new NotFoundException('Property not found');
-    if (property.landlord_id.toString() !== landlordId) {
+    if (!this.isLandlordOfProperty(property, landlordId)) {
       throw new ForbiddenException('Access denied');
     }
     return this.roomModel.create({
@@ -177,5 +185,56 @@ export class RoomsService {
     assignment.vacating_set_by = null;
     await assignment.save();
     return assignment;
+  }
+
+  async getTenantsForLandlord(landlordId: string) {
+    const id = new Types.ObjectId(landlordId);
+
+    // 1. All properties this landlord owns or co-manages
+    const properties = await this.propertyModel.find({
+      $or: [{ landlord_id: id }, { co_landlord_ids: id }],
+    });
+
+    if (properties.length === 0) return [];
+
+    // 2. All rooms across those properties
+    const propertyIds = properties.map((p) => p._id);
+    const rooms = await this.roomModel.find({
+      property_id: { $in: propertyIds },
+    });
+
+    if (rooms.length === 0) return [];
+
+    // 3. Active assignments for those rooms
+    const roomIds = rooms.map((r) => r._id);
+    const assignments = await this.assignmentModel.find({
+      room_id: { $in: roomIds },
+      is_active: true,
+    });
+
+    if (assignments.length === 0) return [];
+
+    // 4. Tenant user details
+    const tenantIds = assignments.map((a) => a.tenant_id);
+    const tenants = await this.userModel.find({ _id: { $in: tenantIds } });
+
+    // 5. Join and return flat list
+    return assignments.map((a) => {
+      const room = rooms.find((r) => r._id.equals(a.room_id));
+      const property = properties.find((p) =>
+        p._id.equals(room?.property_id),
+      );
+      const tenant = tenants.find((t) => t._id.equals(a.tenant_id));
+      return {
+        property_id: property?._id.toString(),
+        property_name: property?.name ?? '',
+        room_id: room?._id.toString(),
+        room_name: room?.name ?? '',
+        base_rent: room?.base_rent ?? 0,
+        tenant_id: tenant?._id.toString(),
+        tenant_name: tenant?.name ?? '',
+        tenant_email: tenant?.email ?? '',
+      };
+    });
   }
 }

@@ -262,6 +262,21 @@ export async function getRooms(propertyId: string): Promise<Room[]> {
   return request(`/properties/${propertyId}/rooms`);
 }
 
+export interface LandlordTenant {
+  property_id: string;
+  property_name: string;
+  room_id: string;
+  room_name: string;
+  base_rent: number;
+  tenant_id: string;
+  tenant_name: string;
+  tenant_email: string;
+}
+
+export async function getLandlordTenants(): Promise<LandlordTenant[]> {
+  return request('/rooms/my-tenants');
+}
+
 export async function createRoom(
   propertyId: string,
   name: string,
@@ -293,6 +308,25 @@ export interface TenantSearchResult {
 
 export async function searchTenant(email: string): Promise<TenantSearchResult> {
   return request(`/users/search?email=${encodeURIComponent(email)}`);
+}
+
+export async function searchLandlord(email: string): Promise<TenantSearchResult> {
+  return request(`/users/search?email=${encodeURIComponent(email)}&role=landlord`);
+}
+
+export async function getCoLandlords(propertyId: string): Promise<TenantSearchResult[]> {
+  return request(`/properties/${propertyId}/co-landlords`);
+}
+
+export async function addCoLandlord(propertyId: string, email: string): Promise<TenantSearchResult> {
+  return request(`/properties/${propertyId}/co-landlords`, {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function removeCoLandlord(propertyId: string, userId: string): Promise<void> {
+  return request(`/properties/${propertyId}/co-landlords/${userId}`, { method: 'DELETE' });
 }
 
 export async function assignTenant(

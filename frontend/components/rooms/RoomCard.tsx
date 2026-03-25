@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { MonthlyRentResult } from "@/services/api";
 import InitialsAvatar from "@/components/ui/InitialsAvatar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { MonthlyRentResult } from "@/services/api";
 import { AppColors } from "@/theme/colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useMemo } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
   item: MonthlyRentResult;
@@ -107,21 +107,6 @@ export default function RoomCard({ item, propertyId, month, year }: Props) {
               {statusLabel}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.historyBtn}
-            onPress={() =>
-              router.push({
-                pathname: `/rent/history/${room.id}`,
-                params: { roomName: room.name },
-              })
-            }
-          >
-            <MaterialCommunityIcons
-              name="history"
-              size={18}
-              color={colors.textMuted}
-            />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -206,6 +191,30 @@ export default function RoomCard({ item, propertyId, month, year }: Props) {
           </Text>
         </View>
       )}
+      {/* View History CTA */}
+      <TouchableOpacity
+        style={styles.historyBar}
+        activeOpacity={0.8}
+        onPress={() =>
+          router.push({
+            pathname: "/rent/history/[roomId]",
+            params: { roomId: room.id, roomName: room.name },
+          })
+        }
+      >
+        <MaterialCommunityIcons
+          name="history"
+          size={15}
+          color={colors.primary}
+        />
+        <Text style={styles.historyBarText}>View All Month History</Text>
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={15}
+          color={colors.primary}
+          style={{ marginLeft: "auto" }}
+        />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -302,5 +311,25 @@ const createStyles = (c: AppColors) =>
       borderTopWidth: 1,
       borderTopColor: c.borderLight,
       paddingTop: 8,
+    },
+    historyBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 10,
+      paddingTop: 10,
+      paddingHorizontal: 4,
+      borderTopWidth: 1,
+      borderTopColor: c.borderLight,
+      backgroundColor: c.primaryLight,
+      borderRadius: 8,
+      paddingVertical: 8,
+      paddingLeft: 10,
+      paddingRight: 10,
+    },
+    historyBarText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: c.primary,
     },
   });

@@ -14,7 +14,10 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('search')
-  search(@Query('email') email: string) {
-    return this.usersService.searchByEmail(email);
+  search(
+    @Query('email') email: string,
+    @Query('role') role?: 'tenant' | 'landlord',
+  ) {
+    return this.usersService.searchByEmail(email, role);
   }
 }
