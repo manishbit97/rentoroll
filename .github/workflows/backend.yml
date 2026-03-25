@@ -88,15 +88,16 @@ jobs:
         uses: appleboy/ssh-action@v1
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: JWT_SECRET
+          envs: JWT_SECRET,MONGODB_URI
           script: |
             cat > /opt/rentoroll/.env.docker <<EOF
             PORT=8080
-            MONGODB_URI=mongodb://mongodb:27017
+            MONGODB_URI=${MONGODB_URI}
             DATABASE=rentoroll
             JWT_SECRET=${JWT_SECRET}
             NODE_ENV=production
