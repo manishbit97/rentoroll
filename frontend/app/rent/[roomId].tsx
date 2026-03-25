@@ -1,3 +1,16 @@
+import PaymentTimeline from "@/components/PaymentTimeline";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import InitialsAvatar from "@/components/ui/InitialsAvatar";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   applyAdvance,
   applyRentIncrease,
@@ -13,6 +26,24 @@ import {
   TenantSearchResult,
   updateAdvance,
 } from "@/services/api";
+import { AppColors } from "@/theme/colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { TextInput as PaperInput } from "react-native-paper";
+import { DatePickerModal } from "react-native-paper-dates";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { toast } from "sonner-native";
 
 function shortDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -21,38 +52,6 @@ function shortDate(dateStr: string) {
     year: "numeric",
   });
 }
-
-import PaymentTimeline from "@/components/PaymentTimeline";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import InitialsAvatar from "@/components/ui/InitialsAvatar";
-import { useTheme } from "@/contexts/ThemeContext";
-import { AppColors } from "@/theme/colors";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "sonner-native";
 
 const MONTHS = [
   "January",
@@ -121,6 +120,7 @@ export default function RentEntryScreen() {
   // ── Advance / deposit state ────────────────────────────────────────
   const [advanceEdit, setAdvanceEdit] = useState("0");
   const [savingAdvance, setSavingAdvance] = useState(false);
+  const [isEditingDeposit, setIsEditingDeposit] = useState(false);
   const [applyAdvanceDialogOpen, setApplyAdvanceDialogOpen] = useState(false);
   const [applyingAdvance, setApplyingAdvance] = useState(false);
 
@@ -453,6 +453,9 @@ export default function RentEntryScreen() {
               <InitialsAvatar name={rentResult?.tenant_name ?? "?"} size={36} />
               <View>
                 <Text style={styles.tenantName}>{rentResult?.tenant_name}</Text>
+                {rentResult?.tenant_email ? (
+                  <Text style={styles.tenantEmail}>{rentResult.tenant_email}</Text>
+                ) : null}
                 <Text style={styles.tenantBadge}>Active Lease</Text>
               </View>
             </View>
@@ -469,23 +472,27 @@ export default function RentEntryScreen() {
                   <View style={styles.appliedBadge}>
                     <Text style={styles.appliedBadgeText}>Applied</Text>
                   </View>
+                ) : isEditingDeposit ? (
+                  <PaperInput
+                    mode="outlined"
+                    keyboardType="numeric"
+                    value={advanceEdit}
+                    onChangeText={setAdvanceEdit}
+                    onBlur={() => { setIsEditingDeposit(false); handleSaveAdvance(); }}
+                    autoFocus
+                    dense
+                    outlineColor={colors.border}
+                    activeOutlineColor={colors.primary}
+                    textColor={colors.text}
+                    style={{ width: 120, height: 40, backgroundColor: colors.surface }}
+                    right={savingAdvance ? <PaperInput.Icon icon="loading" /> : undefined}
+                  />
                 ) : (
                   <View style={styles.depositEditRow}>
-                    <Text style={styles.depositRupee}>₹</Text>
-                    <TextInput
-                      style={styles.depositInput}
-                      keyboardType="numeric"
-                      value={advanceEdit}
-                      onChangeText={setAdvanceEdit}
-                      onBlur={handleSaveAdvance}
-                    />
-                    {savingAdvance && (
-                      <ActivityIndicator
-                        size="small"
-                        color={colors.primary}
-                        style={{ marginLeft: 4 }}
-                      />
-                    )}
+                    <Text style={styles.depositValue}>₹{parseFloat(advanceEdit || "0").toLocaleString("en-IN")}</Text>
+                    <TouchableOpacity onPress={() => setIsEditingDeposit(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.primary} />
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -512,34 +519,35 @@ export default function RentEntryScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={styles.setMoveoutBtn}
-                  onPress={() => setShowVacatingPicker(true)}
-                >
+                <View style={styles.setMoveoutBtn}>
+                  <Text style={styles.setMoveoutText}>Set notice period(exit)</Text>
                   <MaterialCommunityIcons
-                    name="calendar-plus"
+                    name="pencil"
                     size={14}
                     color={colors.textSecondary}
                   />
-                  <Text style={styles.setMoveoutText}>Set move-out date</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={StyleSheet.absoluteFillObject}
+                    onPress={() => setShowVacatingPicker(true)}
+                  />
+                </View>
               )}
 
-              {showVacatingPicker && (
-                <DateTimePicker
-                  value={vacatingPickerDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  minimumDate={new Date(Date.now() + 86400000)}
-                  onChange={(_, date) => {
-                    setShowVacatingPicker(false);
-                    if (date) {
-                      setVacatingPickerDate(date);
-                      handleSetVacatingDate(date);
-                    }
-                  }}
-                />
-              )}
+              <DatePickerModal
+                locale="en"
+                mode="single"
+                visible={showVacatingPicker}
+                onDismiss={() => setShowVacatingPicker(false)}
+                date={vacatingPickerDate}
+                validRange={{ startDate: new Date(Date.now() + 86400000) }}
+                onConfirm={({ date }) => {
+                  setShowVacatingPicker(false);
+                  if (date) {
+                    setVacatingPickerDate(date);
+                    handleSetVacatingDate(date);
+                  }
+                }}
+              />
             </>
           )}
 
@@ -702,14 +710,18 @@ export default function RentEntryScreen() {
         {/* Notes */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Additional Details</Text>
-          <Text style={styles.fieldLabel}>Notes</Text>
-          <TextInput
-            style={[styles.input, { height: 80 }]}
+          <PaperInput
+            mode="outlined"
+            label="Notes"
             placeholder="Any additional notes..."
-            placeholderTextColor={colors.inputPlaceholder}
             multiline
+            numberOfLines={3}
             value={notes}
             onChangeText={setNotes}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+            textColor={colors.text}
+            style={{ backgroundColor: colors.surface }}
           />
         </View>
 
@@ -727,26 +739,22 @@ export default function RentEntryScreen() {
             style={styles.datePickerBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <MaterialCommunityIcons
-              name="calendar"
-              size={18}
-              color={colors.primary}
-            />
+            <MaterialCommunityIcons name="calendar" size={18} color={colors.primary} />
             <Text style={styles.datePickerText}>{paidDate.toDateString()}</Text>
           </TouchableOpacity>
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={paidDate}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              maximumDate={new Date()}
-              onChange={(_, date) => {
-                setShowDatePicker(false);
-                if (date) setPaidDate(date);
-              }}
-            />
-          )}
+          <DatePickerModal
+            locale="en"
+            mode="single"
+            visible={showDatePicker}
+            onDismiss={() => setShowDatePicker(false)}
+            date={paidDate}
+            validRange={{ endDate: new Date() }}
+            onConfirm={({ date }) => {
+              setShowDatePicker(false);
+              if (date) setPaidDate(date);
+            }}
+          />
 
           {/* Payment method selector */}
           <Text style={[styles.fieldLabel, { marginBottom: 8 }]}>
@@ -918,14 +926,17 @@ export default function RentEntryScreen() {
             </Text>
 
             {/* Email search */}
-            <Text style={styles.fieldLabel}>Tenant Email</Text>
             <View style={styles.searchRow}>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
+              <PaperInput
+                mode="outlined"
+                label="Tenant Email"
                 placeholder="tenant@example.com"
-                placeholderTextColor={colors.inputPlaceholder}
+                style={{ flex: 1, backgroundColor: colors.surface }}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                outlineColor={colors.border}
+                activeOutlineColor={colors.primary}
+                textColor={colors.text}
                 value={searchEmail}
                 onChangeText={(v) => {
                   setSearchEmail(v);
@@ -1048,14 +1059,17 @@ export default function RentEntryScreen() {
           </View>
 
           {/* Amount input */}
-          <TextInput
-            style={styles.payInput}
+          <PaperInput
+            mode="outlined"
+            label="Total received (₹)"
             keyboardType="numeric"
             value={payAmount}
             onChangeText={setPayAmount}
-            placeholder="Total received (₹)"
-            placeholderTextColor={colors.inputPlaceholder}
             selectTextOnFocus
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+            textColor={colors.text}
+            style={{ backgroundColor: colors.surface }}
           />
 
           {/* Live outcome preview */}
@@ -1156,72 +1170,50 @@ export default function RentEntryScreen() {
               Update the base rent for this flat. Changes apply to all unpaid
               records from the selected month onwards.
             </Text>
-            <Text style={styles.fieldLabel}>New Base Rent (₹)</Text>
-            <TextInput
-              style={styles.input}
+            <PaperInput
+              mode="outlined"
+              label="New Base Rent (₹)"
               placeholder="e.g. 12000"
-              placeholderTextColor={colors.inputPlaceholder}
               keyboardType="numeric"
               value={newBaseRent}
               onChangeText={setNewBaseRent}
+              outlineColor={colors.border}
+              activeOutlineColor={colors.primary}
+              textColor={colors.text}
+              style={{ backgroundColor: colors.surface }}
             />
             <Text style={[styles.fieldLabel, { marginTop: 14 }]}>
               Effective From Month
             </Text>
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Month</Text>
-                <View
-                  style={[
-                    styles.input,
-                    { justifyContent: "center", padding: 0 },
-                  ]}
-                >
-                  <TextInput
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      color: colors.inputText,
-                    }}
-                    keyboardType="numeric"
-                    value={String(increaseFromMonth)}
-                    onChangeText={(v) => {
-                      const n = parseInt(v);
-                      if (!isNaN(n) && n >= 1 && n <= 12)
-                        setIncreaseFromMonth(n);
-                    }}
-                    placeholder="1–12"
-                    placeholderTextColor={colors.inputPlaceholder}
-                  />
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Year</Text>
-                <View
-                  style={[
-                    styles.input,
-                    { justifyContent: "center", padding: 0 },
-                  ]}
-                >
-                  <TextInput
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      color: colors.inputText,
-                    }}
-                    keyboardType="numeric"
-                    value={String(increaseFromYear)}
-                    onChangeText={(v) => {
-                      const n = parseInt(v);
-                      if (!isNaN(n) && n >= 2000) setIncreaseFromYear(n);
-                    }}
-                    placeholder="e.g. 2025"
-                    placeholderTextColor={colors.inputPlaceholder}
-                  />
-                </View>
-              </View>
+              <PaperInput
+                mode="outlined"
+                label="Month (1–12)"
+                style={{ flex: 1, backgroundColor: colors.surface }}
+                keyboardType="numeric"
+                value={String(increaseFromMonth)}
+                onChangeText={(v) => {
+                  const n = parseInt(v);
+                  if (!isNaN(n) && n >= 1 && n <= 12) setIncreaseFromMonth(n);
+                }}
+                outlineColor={colors.border}
+                activeOutlineColor={colors.primary}
+                textColor={colors.text}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Year"
+                style={{ flex: 1, backgroundColor: colors.surface }}
+                keyboardType="numeric"
+                value={String(increaseFromYear)}
+                onChangeText={(v) => {
+                  const n = parseInt(v);
+                  if (!isNaN(n) && n >= 2000) setIncreaseFromYear(n);
+                }}
+                outlineColor={colors.border}
+                activeOutlineColor={colors.primary}
+                textColor={colors.text}
+              />
             </View>
             <View style={styles.payWarn}>
               <MaterialCommunityIcons
@@ -1329,6 +1321,7 @@ const createStyles = (c: AppColors) =>
       marginBottom: 14,
     },
     tenantName: { fontSize: 15, color: c.text, fontWeight: "700" },
+    tenantEmail: { fontSize: 12, color: c.textSecondary, marginTop: 1 },
     tenantBadge: {
       fontSize: 11,
       fontWeight: "600",
@@ -1641,6 +1634,7 @@ const createStyles = (c: AppColors) =>
     },
     payPreviewText: { fontSize: 13, fontWeight: "600" },
     // ── Deposit row ──
+    depositPaperRow: { marginBottom: 10 },
     depositRow: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -1655,17 +1649,17 @@ const createStyles = (c: AppColors) =>
       paddingVertical: 3,
     },
     appliedBadgeText: { fontSize: 12, color: c.textMuted, fontWeight: "600" },
-    depositEditRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-    depositRupee: { fontSize: 15, color: c.textBody },
+    depositEditRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+    depositValue: { fontSize: 14, fontWeight: "600", color: c.text },
+    depositRupee: { fontSize: 14, color: c.textBody, lineHeight: 22 },
     depositInput: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: "600",
       color: c.text,
-      minWidth: 80,
+      width: 70,
       textAlign: "right",
-      borderBottomWidth: 1,
-      borderBottomColor: c.border,
       paddingVertical: 2,
+      paddingHorizontal: 0,
     },
     // ── Vacating date ──
     vacatingBanner: {

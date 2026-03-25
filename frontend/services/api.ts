@@ -108,6 +108,7 @@ export interface MonthlyRentResult {
   room: Room;
   rent_record: RentRecord;
   tenant_name?: string;
+  tenant_email?: string;
   advance_amount: number;
   advance_adjusted: boolean;
   vacating_date: string | null;

@@ -151,6 +151,7 @@ export class RentService {
           is_active: true,
         });
         let tenant_name: string | undefined;
+        let tenant_email: string | undefined;
 
         if (assignment) {
           // Attach tenant_id to stub if missing
@@ -163,6 +164,7 @@ export class RentService {
           }
           const tenant = await this.userModel.findById(assignment.tenant_id);
           tenant_name = tenant?.name;
+          tenant_email = tenant?.email;
         }
 
         const roomObj = room.toObject() as any;
@@ -173,6 +175,7 @@ export class RentService {
           room: roomObj,
           rent_record: record,
           tenant_name,
+          tenant_email,
           advance_amount: assignment?.advance_amount ?? 0,
           advance_adjusted: assignment?.advance_adjusted ?? false,
           vacating_date: assignment?.vacating_date ?? null,

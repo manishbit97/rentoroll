@@ -9,6 +9,7 @@ import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
+import { Provider as PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { Toaster } from "sonner-native";
 
@@ -45,6 +46,7 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
+      <PaperProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
@@ -58,6 +60,7 @@ export default function RootLayout() {
         <Toaster position="top-center" richColors />
         <PortalHost />
       </ThemeProvider>
+      </PaperProvider>
     </AppThemeProvider>
   );
 }

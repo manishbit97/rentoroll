@@ -8,7 +8,7 @@ import {
 } from "@/services/api";
 import { AppColors } from "@/theme/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { DatePickerModal } from "react-native-paper-dates";
 import { useFocusEffect } from "expo-router";
 import Logo from "@/assets/images/logo.svg";
 import React, { useCallback, useMemo, useState } from "react";
@@ -17,7 +17,6 @@ import {
   Alert,
   Clipboard,
   Linking,
-  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -457,21 +456,21 @@ function RentCard({
                   Moving out? Let your landlord know
                 </Text>
               </TouchableOpacity>
-              {showVacatingPicker && (
-                <DateTimePicker
-                  value={vacatingPickerDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  minimumDate={new Date(Date.now() + 86400000)}
-                  onChange={(_, date) => {
-                    setShowVacatingPicker(false);
-                    if (date) {
-                      setVacatingPickerDate(date);
-                      handleSetVacatingDate(date);
-                    }
-                  }}
-                />
-              )}
+              <DatePickerModal
+                locale="en"
+                mode="single"
+                visible={showVacatingPicker}
+                onDismiss={() => setShowVacatingPicker(false)}
+                date={vacatingPickerDate}
+                validRange={{ startDate: new Date(Date.now() + 86400000) }}
+                onConfirm={({ date }) => {
+                  setShowVacatingPicker(false);
+                  if (date) {
+                    setVacatingPickerDate(date);
+                    handleSetVacatingDate(date);
+                  }
+                }}
+              />
             </View>
           )}
 
