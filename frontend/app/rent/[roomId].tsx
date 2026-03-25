@@ -82,11 +82,20 @@ export default function RentEntryScreen() {
   const { roomId, propertyId, roomName } = params;
 
   const now = new Date();
-  const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
-  const year = params.year ? parseInt(params.year) : now.getFullYear();
+  const [month, setMonth] = useState(params.month ? parseInt(params.month) : now.getMonth() + 1);
+  const [year, setYear] = useState(params.year ? parseInt(params.year) : now.getFullYear());
   const isPastMonth =
     year < now.getFullYear() ||
     (year === now.getFullYear() && month < now.getMonth() + 1);
+
+  const shiftMonth = (delta: number) => {
+    let m = month + delta;
+    let y = year;
+    if (m > 12) { m = 1; y += 1; }
+    if (m < 1)  { m = 12; y -= 1; }
+    setMonth(m);
+    setYear(y);
+  };
 
   const [rentResult, setRentResult] = useState<MonthlyRentResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -427,6 +436,20 @@ export default function RentEntryScreen() {
             <Text style={styles.partialBadgeText}>PARTIAL</Text>
           </View>
         )}
+      </View>
+
+      {/* Month chip */}
+      <View style={styles.monthChip}>
+        <TouchableOpacity onPress={() => shiftMonth(-1)} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <MaterialCommunityIcons name="chevron-left" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <View style={styles.monthChipCenter}>
+          <MaterialCommunityIcons name="calendar-month" size={18} color={colors.primary} style={{ marginRight: 6 }} />
+          <Text style={styles.monthLabel}>{MONTHS[month - 1]} {year}</Text>
+        </View>
+        <TouchableOpacity onPress={() => shiftMonth(1)} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -1260,6 +1283,31 @@ const createStyles = (c: AppColors) =>
     },
     headerTitle: { fontSize: 18, fontWeight: "700", color: c.text },
     headerSub: { fontSize: 12, color: c.textSecondary },
+    monthChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: c.surface,
+      borderRadius: 24,
+      marginHorizontal: 16,
+      marginVertical: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    monthChipCenter: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+    },
+    monthLabel: { fontSize: 15, fontWeight: "700", color: c.text },
     paidBadge: {
       backgroundColor: c.successBg,
       paddingHorizontal: 10,
