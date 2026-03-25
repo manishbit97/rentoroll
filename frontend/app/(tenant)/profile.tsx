@@ -38,7 +38,11 @@ export default function TenantProfileScreen() {
       <View style={styles.section}>
         <RowItem icon="account-outline" label="Edit Profile" colors={colors} />
         <RowItem icon="bell-outline" label="Notifications" colors={colors} />
-        <RowItem icon="help-circle-outline" label="Help & Support" colors={colors} />
+        <RowItem
+          icon="help-circle-outline"
+          label="Help & Support"
+          colors={colors}
+        />
       </View>
 
       <TouchableOpacity
@@ -75,58 +79,85 @@ export default function TenantProfileScreen() {
   );
 }
 
-function RowItem({ icon, label, colors }: { icon: any; label: string; colors: AppColors }) {
+function RowItem({
+  icon,
+  label,
+  colors,
+}: {
+  icon: any;
+  label: string;
+  colors: AppColors;
+}) {
   return (
-    <TouchableOpacity style={{
-      flexDirection: "row", alignItems: "center",
-      padding: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight,
-    }}>
-      <MaterialCommunityIcons name={icon} size={20} color={colors.primary} style={{ marginRight: 14 }} />
-      <Text style={{ flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" }}>{label}</Text>
-      <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+    <TouchableOpacity
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight,
+      }}
+    >
+      <MaterialCommunityIcons
+        name={icon}
+        size={20}
+        color={colors.primary}
+        style={{ marginRight: 14 }}
+      />
+      <Text
+        style={{ flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" }}
+      >
+        {label}
+      </Text>
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={20}
+        color={colors.textMuted}
+      />
     </TouchableOpacity>
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: c.background },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  title: { fontSize: 22, fontWeight: "700", color: c.text },
-  avatarSection: { alignItems: "center", paddingVertical: 28 },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  role: { fontSize: 14, color: c.textSecondary, fontWeight: "500" },
-  section: {
-    backgroundColor: c.surface,
-    borderRadius: 12,
-    margin: 16,
-    borderWidth: 1,
-    borderColor: c.border,
-    overflow: "hidden",
-  },
-  signOutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: c.surface,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: c.dangerBorder,
-    gap: 12,
-  },
-  signOutText: { fontSize: 15, fontWeight: "600", color: c.danger },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    header: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: c.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    title: { fontSize: 22, fontWeight: "700", color: c.text },
+    avatarSection: { alignItems: "center", paddingVertical: 28 },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    role: { fontSize: 14, color: c.textSecondary, fontWeight: "500" },
+    section: {
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      margin: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: "hidden",
+    },
+    signOutRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      marginHorizontal: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+      gap: 12,
+    },
+    signOutText: { fontSize: 15, fontWeight: "600", color: c.danger },
+  });

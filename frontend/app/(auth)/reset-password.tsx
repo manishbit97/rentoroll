@@ -17,27 +17,49 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { AppColors } from "@/theme/colors";
 
 // 6-box OTP input
-function OtpInput({ value, onChange, colors }: { value: string; onChange: (v: string) => void; colors: AppColors }) {
+function OtpInput({
+  value,
+  onChange,
+  colors,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  colors: AppColors;
+}) {
   const inputRef = useRef<TextInput>(null);
   const digits = value.padEnd(6, " ").split("").slice(0, 6);
 
   return (
-    <TouchableOpacity activeOpacity={1} onPress={() => inputRef.current?.focus()}>
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => inputRef.current?.focus()}
+    >
       <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
         {digits.map((d, i) => (
           <View
             key={i}
             style={[
               {
-                width: 46, height: 54, borderRadius: 10,
+                width: 46,
+                height: 54,
+                borderRadius: 10,
                 backgroundColor: colors.inputBg,
-                borderWidth: 1, borderColor: colors.inputBorder,
-                alignItems: "center", justifyContent: "center",
+                borderWidth: 1,
+                borderColor: colors.inputBorder,
+                alignItems: "center",
+                justifyContent: "center",
               },
-              value.length === i && { borderColor: colors.primary, borderWidth: 2 },
+              value.length === i && {
+                borderColor: colors.primary,
+                borderWidth: 2,
+              },
             ]}
           >
-            <Text style={{ fontSize: 22, fontWeight: "700", color: colors.text }}>{d.trim()}</Text>
+            <Text
+              style={{ fontSize: 22, fontWeight: "700", color: colors.text }}
+            >
+              {d.trim()}
+            </Text>
           </View>
         ))}
       </View>
@@ -104,18 +126,26 @@ export default function ResetPasswordScreen() {
       <View style={styles.inner}>
         {/* Back */}
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.text} />
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={22}
+            color={colors.text}
+          />
         </TouchableOpacity>
 
         <View style={styles.iconBox}>
-          <MaterialCommunityIcons name="shield-key-outline" size={32} color={colors.primary} />
+          <MaterialCommunityIcons
+            name="shield-key-outline"
+            size={32}
+            color={colors.primary}
+          />
         </View>
 
         <Text style={styles.title}>Enter OTP</Text>
         <Text style={styles.subtitle}>
           We sent a 6-digit OTP to{" "}
-          <Text style={{ fontWeight: "600", color: colors.text }}>{email}</Text>.
-          {"\n"}Enter it below along with your new password.
+          <Text style={{ fontWeight: "600", color: colors.text }}>{email}</Text>
+          .{"\n"}Enter it below along with your new password.
         </Text>
 
         {/* OTP boxes */}
@@ -132,7 +162,10 @@ export default function ResetPasswordScreen() {
             secureTextEntry={!showPassword}
             returnKeyType="done"
             value={newPassword}
-            onChangeText={(v) => { setNewPassword(v); setError(""); }}
+            onChangeText={(v) => {
+              setNewPassword(v);
+              setError("");
+            }}
             onSubmitEditing={handleReset}
           />
           <TouchableOpacity
@@ -154,7 +187,10 @@ export default function ResetPasswordScreen() {
         ) : null}
 
         <TouchableOpacity
-          style={[styles.btn, (loading || code.length !== 6) && styles.btnDisabled]}
+          style={[
+            styles.btn,
+            (loading || code.length !== 6) && styles.btnDisabled,
+          ]}
           onPress={handleReset}
           disabled={loading || code.length !== 6}
           activeOpacity={0.8}
@@ -178,61 +214,82 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  themeToggle: { position: "absolute", top: 52, right: 24, padding: 8, zIndex: 10 },
-  inner: { flex: 1, paddingHorizontal: 28, paddingTop: 60, paddingBottom: 40 },
-  back: { marginBottom: 32 },
-  iconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: c.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  title: { fontSize: 26, fontWeight: "700", color: c.text, marginBottom: 10 },
-  subtitle: { fontSize: 15, color: c.textSecondary, lineHeight: 22, marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: "500", color: c.text, marginBottom: 10 },
-  passwordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    height: 50,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: c.inputText,
-  },
-  eyeBtn: { paddingHorizontal: 14 },
-  inputError: { borderColor: c.danger },
-  errorBanner: {
-    backgroundColor: c.dangerBgAlt,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: c.dangerBorder,
-  },
-  errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
-  btn: {
-    height: 50,
-    backgroundColor: c.primary,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 4,
-  },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  resendLink: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
-  resendText: { color: c.textSecondary, fontSize: 14 },
-  resendAction: { color: c.primary, fontSize: 14, fontWeight: "600" },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    themeToggle: {
+      position: "absolute",
+      top: 52,
+      right: 24,
+      padding: 8,
+      zIndex: 10,
+    },
+    inner: {
+      flex: 1,
+      paddingHorizontal: 28,
+      paddingTop: 60,
+      paddingBottom: 40,
+    },
+    back: { marginBottom: 32 },
+    iconBox: {
+      width: 64,
+      height: 64,
+      borderRadius: 16,
+      backgroundColor: c.primaryLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 24,
+    },
+    title: { fontSize: 26, fontWeight: "700", color: c.text, marginBottom: 10 },
+    subtitle: {
+      fontSize: 15,
+      color: c.textSecondary,
+      lineHeight: 22,
+      marginBottom: 32,
+    },
+    label: { fontSize: 14, fontWeight: "500", color: c.text, marginBottom: 10 },
+    passwordRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+      marginBottom: 16,
+    },
+    passwordInput: {
+      flex: 1,
+      height: 50,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      color: c.inputText,
+    },
+    eyeBtn: { paddingHorizontal: 14 },
+    inputError: { borderColor: c.danger },
+    errorBanner: {
+      backgroundColor: c.dangerBgAlt,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+    },
+    errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
+    btn: {
+      height: 50,
+      backgroundColor: c.primary,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 4,
+    },
+    btnDisabled: { opacity: 0.5 },
+    btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    resendLink: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 24,
+    },
+    resendText: { color: c.textSecondary, fontSize: 14 },
+    resendAction: { color: c.primary, fontSize: 14, fontWeight: "600" },
+  });

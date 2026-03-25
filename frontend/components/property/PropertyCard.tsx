@@ -42,11 +42,15 @@ export default function PropertyCard({ property, onEdit, onDelete }: Props) {
               `Delete "${property.name}"? This cannot be undone.`,
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive", onPress: () => onDelete(property) },
-              ]
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => onDelete(property),
+                },
+              ],
             );
           }
-        }
+        },
       );
     } else {
       Alert.alert(property.name, "What do you want to do?", [
@@ -60,8 +64,12 @@ export default function PropertyCard({ property, onEdit, onDelete }: Props) {
               `Delete "${property.name}"? This cannot be undone.`,
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive", onPress: () => onDelete(property) },
-              ]
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => onDelete(property),
+                },
+              ],
             ),
         },
         { text: "Cancel", style: "cancel" },
@@ -83,7 +91,11 @@ export default function PropertyCard({ property, onEdit, onDelete }: Props) {
             {property.name}
           </Text>
           <View style={styles.addressRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.textMuted} />
+            <MaterialCommunityIcons
+              name="map-marker-outline"
+              size={12}
+              color={colors.textMuted}
+            />
             <Text style={styles.address} numberOfLines={1}>
               {property.address || "No address set"}
             </Text>
@@ -93,49 +105,58 @@ export default function PropertyCard({ property, onEdit, onDelete }: Props) {
           onPress={handleOptions}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textMuted} />
+          <MaterialCommunityIcons
+            name="dots-vertical"
+            size={22}
+            color={colors.textMuted}
+          />
         </TouchableOpacity>
       </View>
 
       {/* Footer arrow */}
       <View style={styles.footer}>
         <Text style={styles.footerLink}>View rooms</Text>
-        <MaterialCommunityIcons name="chevron-right" size={16} color={colors.primary} />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={16}
+          color={colors.primary}
+        />
       </View>
     </TouchableOpacity>
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  card: {
-    backgroundColor: c.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  body: { flex: 1 },
-  name: { fontSize: 16, fontWeight: "700", color: c.text, marginBottom: 3 },
-  addressRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  address: { fontSize: 12, color: c.textMuted, flex: 1 },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: c.borderLight,
-    paddingTop: 10,
-  },
-  footerLink: { flex: 1, fontSize: 13, fontWeight: "600", color: c.primary },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    topRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 12,
+    },
+    body: { flex: 1 },
+    name: { fontSize: 16, fontWeight: "700", color: c.text, marginBottom: 3 },
+    addressRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+    address: { fontSize: 12, color: c.textMuted, flex: 1 },
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderTopWidth: 1,
+      borderTopColor: c.borderLight,
+      paddingTop: 10,
+    },
+    footerLink: { flex: 1, fontSize: 13, fontWeight: "600", color: c.primary },
+  });

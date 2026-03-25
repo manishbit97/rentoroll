@@ -21,21 +21,27 @@ export default function TenantLayout() {
         name="index"
         options={{
           title: "My Rent",
-          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="home-account" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabBarMaterialIcon name="home-account" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: "History",
-          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="history" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabBarMaterialIcon name="history" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <TabBarMaterialIcon name="account-circle" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabBarMaterialIcon name="account-circle" color={color} />
+          ),
         }}
       />
     </Tabs>

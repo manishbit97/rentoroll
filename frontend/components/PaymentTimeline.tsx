@@ -78,12 +78,7 @@ export default function PaymentTimeline({ entries, showEmail = false }: Props) {
             </View>
 
             {/* ── Right: content ── */}
-            <View
-              style={[
-                t.content,
-                isLast && t.contentLast,
-              ]}
-            >
+            <View style={[t.content, isLast && t.contentLast]}>
               {/* Action badge + "Current" chip (last only) + date */}
               <View style={t.header}>
                 <View style={[t.badge, { backgroundColor: badgeBg }]}>
@@ -117,9 +112,7 @@ export default function PaymentTimeline({ entries, showEmail = false }: Props) {
                   by {entry.by_email}
                 </Text>
               )}
-              {entry.note ? (
-                <Text style={t.note}>{entry.note}</Text>
-              ) : null}
+              {entry.note ? <Text style={t.note}>{entry.note}</Text> : null}
             </View>
           </View>
         );

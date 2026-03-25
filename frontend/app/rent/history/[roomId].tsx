@@ -12,10 +12,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getRoomHistory, RentRecord } from "@/services/api";
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export default function RentHistoryScreen() {
-  const { roomId, roomName } = useLocalSearchParams<{ roomId: string; roomName: string }>();
+  const { roomId, roomName } = useLocalSearchParams<{
+    roomId: string;
+    roomName: string;
+  }>();
   const [records, setRecords] = useState<RentRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +60,11 @@ export default function RentHistoryScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           {records.length === 0 ? (
             <View style={styles.empty}>
-              <MaterialCommunityIcons name="history" size={56} color="#d1d5db" />
+              <MaterialCommunityIcons
+                name="history"
+                size={56}
+                color="#d1d5db"
+              />
               <Text style={styles.emptyText}>No payment history yet</Text>
             </View>
           ) : (
@@ -57,7 +77,7 @@ export default function RentHistoryScreen() {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PAID:    { bg: "#d1fae5", text: "#10b981" },
+  PAID: { bg: "#d1fae5", text: "#10b981" },
   PARTIAL: { bg: "#fef3c7", text: "#d97706" },
   PENDING: { bg: "#fee2e2", text: "#ef4444" },
 };
@@ -76,11 +96,15 @@ function HistoryRow({ record }: { record: RentRecord }) {
           {MONTHS[record.month - 1]} {record.year}
         </Text>
         <View style={styles.breakdown}>
-          <Text style={styles.breakdownItem}>Rent ₹{record.base_rent.toLocaleString("en-IN")}</Text>
+          <Text style={styles.breakdownItem}>
+            Rent ₹{record.base_rent.toLocaleString("en-IN")}
+          </Text>
           {record.electricity > 0 && (
             <>
               <Text style={styles.dot}>·</Text>
-              <Text style={styles.breakdownItem}>Elec ₹{record.electricity.toLocaleString("en-IN")}</Text>
+              <Text style={styles.breakdownItem}>
+                Elec ₹{record.electricity.toLocaleString("en-IN")}
+              </Text>
             </>
           )}
         </View>
@@ -88,17 +112,22 @@ function HistoryRow({ record }: { record: RentRecord }) {
           <Text style={styles.cfDebt}>↑ CF +₹{cf.toLocaleString("en-IN")}</Text>
         )}
         {cf < 0 && (
-          <Text style={styles.cfCredit}>↓ Credit −₹{Math.abs(cf).toLocaleString("en-IN")}</Text>
+          <Text style={styles.cfCredit}>
+            ↓ Credit −₹{Math.abs(cf).toLocaleString("en-IN")}
+          </Text>
         )}
         {isPartial && (
           <Text style={styles.partialInfo}>
-            Paid ₹{paidAmount.toLocaleString("en-IN")} · Due ₹{(record.total - paidAmount).toLocaleString("en-IN")} remaining
+            Paid ₹{paidAmount.toLocaleString("en-IN")} · Due ₹
+            {(record.total - paidAmount).toLocaleString("en-IN")} remaining
           </Text>
         )}
         {record.notes ? <Text style={styles.notes}>{record.notes}</Text> : null}
       </View>
       <View style={styles.rowRight}>
-        <Text style={styles.total}>₹{record.total.toLocaleString("en-IN")}</Text>
+        <Text style={styles.total}>
+          ₹{record.total.toLocaleString("en-IN")}
+        </Text>
         <View style={[styles.badge, { backgroundColor: badge.bg }]}>
           <Text style={[styles.badgeText, { color: badge.text }]}>
             {record.status}
@@ -106,7 +135,10 @@ function HistoryRow({ record }: { record: RentRecord }) {
         </View>
         {(isPaid || isPartial) && record.paid_date && (
           <Text style={[styles.paidDate, { color: badge.text }]}>
-            {new Date(record.paid_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+            {new Date(record.paid_date).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+            })}
           </Text>
         )}
       </View>
@@ -158,5 +190,10 @@ const styles = StyleSheet.create({
   paidDate: { fontSize: 11, fontWeight: "500" },
   cfDebt: { fontSize: 11, color: "#ef4444", fontWeight: "500", marginTop: 3 },
   cfCredit: { fontSize: 11, color: "#10b981", fontWeight: "500", marginTop: 3 },
-  partialInfo: { fontSize: 11, color: "#d97706", fontWeight: "500", marginTop: 3 },
+  partialInfo: {
+    fontSize: 11,
+    color: "#d97706",
+    fontWeight: "500",
+    marginTop: 3,
+  },
 });

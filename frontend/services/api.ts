@@ -13,7 +13,6 @@ export async function setToken(token: string): Promise<void> {
   await AsyncStorage.setItem(TOKEN_KEY, token);
 }
 
-
 export async function clearToken(): Promise<void> {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
@@ -52,7 +51,10 @@ export interface Room {
 
 export type PaymentStatus = "PAID" | "PARTIAL" | "PENDING";
 
-export type AuditAction = "PAYMENT_RECORDED" | "PAYMENT_UPDATED" | "ADVANCE_APPLIED";
+export type AuditAction =
+  | "PAYMENT_RECORDED"
+  | "PAYMENT_UPDATED"
+  | "ADVANCE_APPLIED";
 
 export interface PaymentLogEntry {
   action: AuditAction;
@@ -73,9 +75,9 @@ export interface RentRecord {
   year: number;
   base_rent: number;
   electricity: number;
-  carry_forward: number;  // signed: +ve=debt from prev month, -ve=credit
-  total: number;          // base_rent + electricity + carry_forward
-  paid_amount: number;    // what was actually received
+  carry_forward: number; // signed: +ve=debt from prev month, -ve=credit
+  total: number; // base_rent + electricity + carry_forward
+  paid_amount: number; // what was actually received
   status: PaymentStatus;
   paid_date?: string;
   notes?: string;
@@ -138,10 +140,7 @@ function normalizeIds(data: unknown): unknown {
   return data;
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = await getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -172,7 +171,7 @@ export async function register(
   email: string,
   password: string,
   role: Role,
-  phone?: string
+  phone?: string,
 ): Promise<{ token: string; user: User }> {
   return request("/auth/register", {
     method: "POST",
@@ -182,7 +181,7 @@ export async function register(
 
 export async function login(
   email: string,
-  password: string
+  password: string,
 ): Promise<{ token: string; user: User }> {
   return request("/auth/login", {
     method: "POST",
@@ -200,7 +199,7 @@ export async function forgotPassword(email: string): Promise<void> {
 export async function resetPassword(
   email: string,
   otp: string,
-  new_password: string
+  new_password: string,
 ): Promise<void> {
   return request("/auth/reset-password", {
     method: "POST",
@@ -212,7 +211,9 @@ export async function getProfile(): Promise<UserProfile> {
   return request("/auth/profile");
 }
 
-export async function updateProfile(data: Partial<Pick<UserProfile, "name" | "phone" | "upi_id">>): Promise<UserProfile> {
+export async function updateProfile(
+  data: Partial<Pick<UserProfile, "name" | "phone" | "upi_id">>,
+): Promise<UserProfile> {
   return request("/auth/profile", {
     method: "PATCH",
     body: JSON.stringify(data),
@@ -231,7 +232,7 @@ export async function getProperty(id: string): Promise<Property> {
 
 export async function createProperty(
   name: string,
-  address: string
+  address: string,
 ): Promise<Property> {
   return request("/properties", {
     method: "POST",
@@ -242,7 +243,7 @@ export async function createProperty(
 export async function updateProperty(
   id: string,
   name: string,
-  address: string
+  address: string,
 ): Promise<void> {
   return request(`/properties/${id}`, {
     method: "PUT",
@@ -263,7 +264,7 @@ export async function getRooms(propertyId: string): Promise<Room[]> {
 export async function createRoom(
   propertyId: string,
   name: string,
-  base_rent: number
+  base_rent: number,
 ): Promise<Room> {
   return request(`/properties/${propertyId}/rooms`, {
     method: "POST",
@@ -274,7 +275,7 @@ export async function createRoom(
 export async function updateRoom(
   id: string,
   name: string,
-  base_rent: number
+  base_rent: number,
 ): Promise<void> {
   return request(`/rooms/${id}`, {
     method: "PUT",
@@ -295,7 +296,7 @@ export async function searchTenant(email: string): Promise<TenantSearchResult> {
 
 export async function assignTenant(
   roomId: string,
-  tenantId: string
+  tenantId: string,
 ): Promise<void> {
   return request(`/rooms/${roomId}/assign`, {
     method: "POST",
@@ -312,11 +313,9 @@ export async function removeTenant(roomId: string): Promise<void> {
 export async function getMonthlyRent(
   propertyId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<MonthlyRentResult[]> {
-  return request(
-    `/rent?propertyId=${propertyId}&month=${month}&year=${year}`
-  );
+  return request(`/rent?propertyId=${propertyId}&month=${month}&year=${year}`);
 }
 
 export async function getRoomHistory(roomId: string): Promise<RentRecord[]> {
@@ -341,11 +340,14 @@ export async function saveRentRecord(data: {
 export async function markAsPaid(
   id: string,
   paidDate?: string,
-  amount?: number
+  amount?: number,
 ): Promise<void> {
   return request(`/rent/${id}/pay`, {
     method: "PATCH",
-    body: JSON.stringify({ paid_date: paidDate, ...(amount != null ? { amount } : {}) }),
+    body: JSON.stringify({
+      paid_date: paidDate,
+      ...(amount != null ? { amount } : {}),
+    }),
   });
 }
 
@@ -353,7 +355,7 @@ export async function markAsPaid(
 
 export async function getMyRent(
   month: number,
-  year: number
+  year: number,
 ): Promise<RentRecord[]> {
   return request(`/tenant/rent?month=${month}&year=${year}`);
 }
@@ -364,14 +366,20 @@ export async function getMyHistory(): Promise<RentRecord[]> {
 
 // ── Advance / Vacating / Rent Increase ────────────────────────────────────
 
-export async function updateAdvance(roomId: string, amount: number): Promise<void> {
+export async function updateAdvance(
+  roomId: string,
+  amount: number,
+): Promise<void> {
   return request(`/rooms/${roomId}/advance`, {
     method: "PATCH",
     body: JSON.stringify({ amount }),
   });
 }
 
-export async function setVacatingDate(roomId: string, vacatingDate: string): Promise<void> {
+export async function setVacatingDate(
+  roomId: string,
+  vacatingDate: string,
+): Promise<void> {
   return request(`/rooms/${roomId}/vacating`, {
     method: "PATCH",
     body: JSON.stringify({ vacating_date: vacatingDate }),
@@ -382,7 +390,9 @@ export async function clearVacatingDate(roomId: string): Promise<void> {
   return request(`/rooms/${roomId}/vacating`, { method: "DELETE" });
 }
 
-export async function applyAdvance(rentRecordId: string): Promise<ApplyAdvanceResult> {
+export async function applyAdvance(
+  rentRecordId: string,
+): Promise<ApplyAdvanceResult> {
   return request("/rent/apply-advance", {
     method: "POST",
     body: JSON.stringify({ rent_record_id: rentRecordId }),
@@ -393,11 +403,15 @@ export async function applyRentIncrease(
   roomId: string,
   newBaseRent: number,
   fromMonth: number,
-  fromYear: number
+  fromYear: number,
 ): Promise<{ updated_count: number; room: Room }> {
   return request(`/rent/room/${roomId}/increase`, {
     method: "POST",
-    body: JSON.stringify({ new_base_rent: newBaseRent, from_month: fromMonth, from_year: fromYear }),
+    body: JSON.stringify({
+      new_base_rent: newBaseRent,
+      from_month: fromMonth,
+      from_year: fromYear,
+    }),
   });
 }
 

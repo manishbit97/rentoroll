@@ -1,4 +1,12 @@
-import { clearToken, getToken, login, register, Role, setToken, User } from "./api";
+import {
+  clearToken,
+  getToken,
+  login,
+  register,
+  Role,
+  setToken,
+  User,
+} from "./api";
 
 interface AuthState {
   user: User | null;
@@ -23,7 +31,7 @@ function decodeJWT(token: string): User | null {
 
 export async function signIn(
   email: string,
-  password: string
+  password: string,
 ): Promise<AuthState> {
   const res = await login(email, password);
   await setToken(res.token);
@@ -35,7 +43,7 @@ export async function signUp(
   email: string,
   password: string,
   role: Role,
-  phone?: string
+  phone?: string,
 ): Promise<AuthState> {
   const res = await register(name, email, password, role, phone);
   await setToken(res.token);

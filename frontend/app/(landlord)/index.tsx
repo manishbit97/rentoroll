@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import {
   View,
   Text,
@@ -164,7 +170,11 @@ export default function PropertiesScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleSignOut} style={styles.iconBtn}>
-            <MaterialCommunityIcons name="logout" size={22} color={colors.textSecondary} />
+            <MaterialCommunityIcons
+              name="logout"
+              size={22}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -239,7 +249,11 @@ export default function PropertiesScreen() {
                 setNewAddress("");
               }}
             >
-              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.modalBody}>
@@ -284,7 +298,11 @@ export default function PropertiesScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit Property</Text>
             <TouchableOpacity onPress={() => setEditVisible(false)}>
-              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.modalBody}>
@@ -322,82 +340,109 @@ export default function PropertiesScreen() {
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: c.background },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  logoWrap: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  logoText: { fontSize: 20, fontWeight: "800", color: c.text, letterSpacing: -0.5 },
-  iconBtn: { padding: 8 },
-  list: { padding: 16 },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: c.textMuted,
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
-  empty: { alignItems: "center", paddingTop: 80 },
-  emptyText: { fontSize: 18, fontWeight: "600", color: c.textBody, marginTop: 16 },
-  emptySub: { fontSize: 14, color: c.textMuted, marginTop: 8, textAlign: "center" },
-  fab: {
-    position: "absolute",
-    bottom: 28,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: c.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  modalSafe: { flex: 1, backgroundColor: c.surface },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: c.text },
-  modalBody: { padding: 20 },
-  label: { fontSize: 14, fontWeight: "500", color: c.textBody, marginBottom: 6 },
-  input: {
-    height: 50,
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: c.inputText,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-  },
-  saveBtn: {
-    height: 50,
-    backgroundColor: c.primary,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 28,
-  },
-  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      backgroundColor: c.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    logoWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    logoText: {
+      fontSize: 20,
+      fontWeight: "800",
+      color: c.text,
+      letterSpacing: -0.5,
+    },
+    iconBtn: { padding: 8 },
+    list: { padding: 16 },
+    sectionHeader: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: c.textMuted,
+      letterSpacing: 1,
+      marginBottom: 10,
+    },
+    empty: { alignItems: "center", paddingTop: 80 },
+    emptyText: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: c.textBody,
+      marginTop: 16,
+    },
+    emptySub: {
+      fontSize: 14,
+      color: c.textMuted,
+      marginTop: 8,
+      textAlign: "center",
+    },
+    fab: {
+      position: "absolute",
+      bottom: 28,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: c.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    modalSafe: { flex: 1, backgroundColor: c.surface },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    modalTitle: { fontSize: 20, fontWeight: "700", color: c.text },
+    modalBody: { padding: 20 },
+    label: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: c.textBody,
+      marginBottom: 6,
+    },
+    input: {
+      height: 50,
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      color: c.inputText,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+    },
+    saveBtn: {
+      height: 50,
+      backgroundColor: c.primary,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 28,
+    },
+    saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  });
 
 // ── Aurora Portfolio Card ─────────────────────────────────────────────────────
 
@@ -413,9 +458,19 @@ function PortfolioCard({ count, isDark }: { count: number; isDark: boolean }) {
     const wave = (val: Animated.Value, lo: number, dur: number) =>
       Animated.loop(
         Animated.sequence([
-          Animated.timing(val, { toValue: 1, duration: dur, useNativeDriver: false, easing: Easing.inOut(Easing.ease) }),
-          Animated.timing(val, { toValue: lo, duration: dur, useNativeDriver: false, easing: Easing.inOut(Easing.ease) }),
-        ])
+          Animated.timing(val, {
+            toValue: 1,
+            duration: dur,
+            useNativeDriver: false,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(val, {
+            toValue: lo,
+            duration: dur,
+            useNativeDriver: false,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ]),
       );
     wave(a1, 0.2, 6000).start();
     wave(a2, 0.25, 8500).start();
@@ -425,48 +480,88 @@ function PortfolioCard({ count, isDark }: { count: number; isDark: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [a1, a2, a3, a4, a5]);
 
-  const teal   = isDark ? "rgba(0,210,230,0.22)"   : "rgba(0,195,215,0.14)";
-  const violet = isDark ? "rgba(130,90,255,0.18)"  : "rgba(120,85,255,0.10)";
-  const mint   = isDark ? "rgba(60,215,170,0.20)"  : "rgba(70,210,175,0.12)";
-  const rose   = isDark ? "rgba(255,179,227,0.18)" : "rgba(255,179,227,0.12)";
-  const pink   = isDark ? "rgba(255,179,227,0.28)" : "rgba(255,179,227,0.22)";
-  const bg     = isDark ? "#081525" : "#e8f5ff";
+  const teal = isDark ? "rgba(0,210,230,0.22)" : "rgba(0,195,215,0.14)";
+  const violet = isDark ? "rgba(130,90,255,0.18)" : "rgba(120,85,255,0.10)";
+  const mint = isDark ? "rgba(60,215,170,0.20)" : "rgba(70,210,175,0.12)";
+  const rose = isDark ? "rgba(255,179,227,0.18)" : "rgba(255,179,227,0.12)";
+  const pink = isDark ? "rgba(255,179,227,0.28)" : "rgba(255,179,227,0.22)";
+  const bg = isDark ? "#081525" : "#e8f5ff";
   const labelC = isDark ? "rgba(150,200,255,0.75)" : "rgba(30,80,160,0.55)";
   const countC = isDark ? "#daeeff" : "#0d2b5e";
-  const subC   = isDark ? "rgba(150,200,255,0.6)"  : "rgba(30,80,160,0.45)";
+  const subC = isDark ? "rgba(150,200,255,0.6)" : "rgba(30,80,160,0.45)";
 
   const borderColors = isDark
-    ? (["rgba(100,69,255,0.4)", "rgba(255,179,227,0.35)", "rgba(122,210,255,0.4)"] as const)
-    : (["rgba(87,53,255,0.35)", "rgba(255,179,227,0.4)", "rgba(96,170,255,0.35)"] as const);
+    ? ([
+        "rgba(100,69,255,0.4)",
+        "rgba(255,179,227,0.35)",
+        "rgba(122,210,255,0.4)",
+      ] as const)
+    : ([
+        "rgba(87,53,255,0.35)",
+        "rgba(255,179,227,0.4)",
+        "rgba(96,170,255,0.35)",
+      ] as const);
 
   return (
-    <LinearGradient colors={borderColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={pcStyles.borderWrap}>
+    <LinearGradient
+      colors={borderColors}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={pcStyles.borderWrap}
+    >
       <View style={[pcStyles.inner, { backgroundColor: bg }]}>
         {/* Teal sweep left→right */}
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: a1 }]}>
-          <LinearGradient colors={["transparent", teal, "transparent"]} start={{ x: 0, y: 0.35 }} end={{ x: 1, y: 0.65 }} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={["transparent", teal, "transparent"]}
+            start={{ x: 0, y: 0.35 }}
+            end={{ x: 1, y: 0.65 }}
+            style={StyleSheet.absoluteFillObject}
+          />
         </Animated.View>
         {/* Violet diagonal */}
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: a2 }]}>
-          <LinearGradient colors={[violet, "transparent", violet]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={[violet, "transparent", violet]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
         </Animated.View>
         {/* Mint sweep right→left */}
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: a3 }]}>
-          <LinearGradient colors={["transparent", mint, "transparent"]} start={{ x: 1, y: 0.2 }} end={{ x: 0, y: 0.8 }} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={["transparent", mint, "transparent"]}
+            start={{ x: 1, y: 0.2 }}
+            end={{ x: 0, y: 0.8 }}
+            style={StyleSheet.absoluteFillObject}
+          />
         </Animated.View>
         {/* Rose blush top */}
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: a4 }]}>
-          <LinearGradient colors={[rose, "transparent"]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={[rose, "transparent"]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
         </Animated.View>
         {/* Pink (#ffb3e3) diagonal sweep bottom-left→top-right */}
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: a5 }]}>
-          <LinearGradient colors={["transparent", pink, "transparent"]} start={{ x: 0, y: 1 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={["transparent", pink, "transparent"]}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFillObject}
+          />
         </Animated.View>
         {/* Content */}
         <View style={pcStyles.content}>
           <Text style={[pcStyles.label, { color: labelC }]}>MY PORTFOLIO</Text>
           <Text style={[pcStyles.count, { color: countC }]}>{count}</Text>
-          <Text style={[pcStyles.sub, { color: subC }]}>{count === 1 ? "Property" : "Properties"}</Text>
+          <Text style={[pcStyles.sub, { color: subC }]}>
+            {count === 1 ? "Property" : "Properties"}
+          </Text>
         </View>
       </View>
     </LinearGradient>

@@ -1,7 +1,14 @@
 import React from "react";
 import { View, Text } from "react-native";
 
-const COLORS = ["#4f46e5", "#0891b2", "#059669", "#d97706", "#dc2626", "#7c3aed"];
+const COLORS = [
+  "#4f46e5",
+  "#0891b2",
+  "#059669",
+  "#d97706",
+  "#dc2626",
+  "#7c3aed",
+];
 
 interface Props {
   name: string;

@@ -22,7 +22,14 @@ function AlertDialogContent({
           style={[styles.overlay]}
         >
           <AlertDialogPrimitive.Content
-            style={StyleSheet.flatten([styles.content, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }])}
+            style={StyleSheet.flatten([
+              styles.content,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: 1,
+              },
+            ])}
             {...props}
           >
             {children}
@@ -56,7 +63,9 @@ function AlertDialogDescription({
   const { colors } = useTheme();
   return (
     <AlertDialogPrimitive.Description>
-      <Text style={[styles.description, { color: colors.textSecondary }]}>{children}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
+        {children}
+      </Text>
     </AlertDialogPrimitive.Description>
   );
 }
@@ -100,7 +109,9 @@ function AlertDialogCancel({
           pressed && styles.pressed,
         ]}
       >
-        <Text style={[styles.cancelText, { color: colors.textBody }]}>{children as string}</Text>
+        <Text style={[styles.cancelText, { color: colors.textBody }]}>
+          {children as string}
+        </Text>
       </Pressable>
     </AlertDialogPrimitive.Cancel>
   );

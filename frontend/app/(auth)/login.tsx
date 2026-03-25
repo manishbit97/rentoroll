@@ -73,7 +73,12 @@ export default function LoginScreen() {
 
         {/* Email */}
         <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
-          <MaterialCommunityIcons name="email-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
+          <MaterialCommunityIcons
+            name="email-outline"
+            size={18}
+            color={colors.inputPlaceholder}
+            style={styles.inputIcon}
+          />
           <TextInput
             style={styles.input}
             placeholder="Email address"
@@ -82,13 +87,21 @@ export default function LoginScreen() {
             keyboardType="email-address"
             returnKeyType="next"
             value={email}
-            onChangeText={(v) => { setEmail(v); setError(""); }}
+            onChangeText={(v) => {
+              setEmail(v);
+              setError("");
+            }}
           />
         </View>
 
         {/* Password */}
         <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
-          <MaterialCommunityIcons name="lock-outline" size={18} color={colors.inputPlaceholder} style={styles.inputIcon} />
+          <MaterialCommunityIcons
+            name="lock-outline"
+            size={18}
+            color={colors.inputPlaceholder}
+            style={styles.inputIcon}
+          />
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -96,10 +109,16 @@ export default function LoginScreen() {
             secureTextEntry={!showPass}
             returnKeyType="done"
             value={password}
-            onChangeText={(v) => { setPassword(v); setError(""); }}
+            onChangeText={(v) => {
+              setPassword(v);
+              setError("");
+            }}
             onSubmitEditing={handleLogin}
           />
-          <TouchableOpacity onPress={() => setShowPass((p) => !p)} style={styles.eyeBtn}>
+          <TouchableOpacity
+            onPress={() => setShowPass((p) => !p)}
+            style={styles.eyeBtn}
+          >
             <MaterialCommunityIcons
               name={showPass ? "eye-off-outline" : "eye-outline"}
               size={18}
@@ -133,7 +152,7 @@ export default function LoginScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Sign In  →</Text>
+            <Text style={styles.btnText}>Sign In →</Text>
           )}
         </TouchableOpacity>
 
@@ -155,87 +174,109 @@ export default function LoginScreen() {
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  themeToggle: { position: "absolute", top: 52, right: 24, padding: 8, zIndex: 10 },
-  inner: {
-    flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: "center",
-    paddingBottom: 40,
-  },
-  logoWrap: { alignItems: "center", marginBottom: 40 },
-  logoBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    shadowColor: c.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  appName: { fontSize: 22, fontWeight: "700", color: c.text, marginBottom: 4 },
-  tagline: { fontSize: 14, color: c.textSecondary },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: c.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-    marginBottom: 12,
-    paddingHorizontal: 14,
-    height: 52,
-  },
-  inputRowError: { borderColor: c.danger },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: c.inputText },
-  eyeBtn: { padding: 4 },
-  forgotBtn: { alignSelf: "flex-end", marginBottom: 8 },
-  link: { color: c.primary, fontSize: 13, fontWeight: "600" },
-  errorBanner: {
-    backgroundColor: c.dangerBgAlt,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: c.dangerBorder,
-  },
-  errorText: { color: c.danger, fontSize: 13, fontWeight: "500" },
-  btn: {
-    height: 52,
-    backgroundColor: c.primary,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 4,
-    shadowColor: c.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "700", letterSpacing: 0.3 },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
-  dividerText: { marginHorizontal: 12, fontSize: 12, color: c.textMuted, fontWeight: "600" },
-  createBtn: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  createBtnText: { color: c.primary, fontSize: 15, fontWeight: "700" },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    themeToggle: {
+      position: "absolute",
+      top: 52,
+      right: 24,
+      padding: 8,
+      zIndex: 10,
+    },
+    inner: {
+      flex: 1,
+      paddingHorizontal: 28,
+      justifyContent: "center",
+      paddingBottom: 40,
+    },
+    logoWrap: { alignItems: "center", marginBottom: 40 },
+    logoBox: {
+      width: 64,
+      height: 64,
+      borderRadius: 18,
+      backgroundColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+      shadowColor: c.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    appName: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: c.text,
+      marginBottom: 4,
+    },
+    tagline: { fontSize: 14, color: c.textSecondary },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: 12,
+      paddingHorizontal: 14,
+      height: 52,
+    },
+    inputRowError: { borderColor: c.danger },
+    inputIcon: { marginRight: 10 },
+    input: { flex: 1, fontSize: 15, color: c.inputText },
+    eyeBtn: { padding: 4 },
+    forgotBtn: { alignSelf: "flex-end", marginBottom: 8 },
+    link: { color: c.primary, fontSize: 13, fontWeight: "600" },
+    errorBanner: {
+      backgroundColor: c.dangerBgAlt,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+    },
+    errorText: { color: c.danger, fontSize: 13, fontWeight: "500" },
+    btn: {
+      height: 52,
+      backgroundColor: c.primary,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 4,
+      shadowColor: c.primary,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    btnDisabled: { opacity: 0.6 },
+    btnText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "700",
+      letterSpacing: 0.3,
+    },
+    divider: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: 20,
+    },
+    dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
+    dividerText: {
+      marginHorizontal: 12,
+      fontSize: 12,
+      color: c.textMuted,
+      fontWeight: "600",
+    },
+    createBtn: {
+      height: 52,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    createBtnText: { color: c.primary, fontSize: 15, fontWeight: "700" },
+  });

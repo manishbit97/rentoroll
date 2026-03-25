@@ -130,12 +130,16 @@ export default function RentEntryScreen() {
   const [clearingVacating, setClearingVacating] = useState(false);
 
   // ── Payment method selector ───────────────────────────────────────
-  const [paymentMethod, setPaymentMethod] = useState<"Bank" | "Cash" | "UPI" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<
+    "Bank" | "Cash" | "UPI" | null
+  >(null);
 
   // ── Rent increase modal ────────────────────────────────────────────
   const [increaseModalOpen, setIncreaseModalOpen] = useState(false);
   const [newBaseRent, setNewBaseRent] = useState("");
-  const [increaseFromMonth, setIncreaseFromMonth] = useState(now.getMonth() + 1);
+  const [increaseFromMonth, setIncreaseFromMonth] = useState(
+    now.getMonth() + 1,
+  );
   const [increaseFromYear, setIncreaseFromYear] = useState(now.getFullYear());
   const [applyingIncrease, setApplyingIncrease] = useState(false);
 
@@ -177,7 +181,9 @@ export default function RentEntryScreen() {
     }
     setSaving(true);
     try {
-      const notesWithMethod = paymentMethod ? `${notes}${notes ? " " : ""}[${paymentMethod}]` : notes;
+      const notesWithMethod = paymentMethod
+        ? `${notes}${notes ? " " : ""}[${paymentMethod}]`
+        : notes;
       await saveRentRecord({
         room_id: roomId!,
         property_id: propertyId!,
@@ -203,7 +209,8 @@ export default function RentEntryScreen() {
     }
     // Pre-fill with existing paid_amount when correcting so landlord
     // can see what was last recorded and update from there
-    const prefill = paidAmount > 0 ? paidAmount : (rentResult.rent_record.total ?? total);
+    const prefill =
+      paidAmount > 0 ? paidAmount : (rentResult.rent_record.total ?? total);
     setPayAmount(String(prefill));
     setPayDialogOpen(true);
   };
@@ -224,10 +231,14 @@ export default function RentEntryScreen() {
       );
       const due = rentResult!.rent_record!.total ?? total;
       if (amount >= due) {
-        toast.success(`Payment of ₹${amount.toLocaleString("en-IN")} recorded.`);
+        toast.success(
+          `Payment of ₹${amount.toLocaleString("en-IN")} recorded.`,
+        );
       } else {
         const remaining = due - amount;
-        toast.success(`₹${amount.toLocaleString("en-IN")} recorded. ₹${remaining.toLocaleString("en-IN")} carries to next month.`);
+        toast.success(
+          `₹${amount.toLocaleString("en-IN")} recorded. ₹${remaining.toLocaleString("en-IN")} carries to next month.`,
+        );
       }
       loadData();
     } catch (e: any) {
@@ -314,9 +325,13 @@ export default function RentEntryScreen() {
     try {
       const result = await applyAdvance(rentResult.rent_record.id);
       if (result.refund > 0) {
-        toast.success(`Advance applied. ₹${result.refund.toLocaleString("en-IN")} refund due to tenant.`);
+        toast.success(
+          `Advance applied. ₹${result.refund.toLocaleString("en-IN")} refund due to tenant.`,
+        );
       } else if (result.shortfall > 0) {
-        toast.success(`Advance applied. ₹${result.shortfall.toLocaleString("en-IN")} still owed.`);
+        toast.success(
+          `Advance applied. ₹${result.shortfall.toLocaleString("en-IN")} still owed.`,
+        );
       } else {
         toast.success("Advance applied. Balance fully settled.");
       }
@@ -359,9 +374,16 @@ export default function RentEntryScreen() {
     }
     setApplyingIncrease(true);
     try {
-      const result = await applyRentIncrease(roomId!, rent, increaseFromMonth, increaseFromYear);
+      const result = await applyRentIncrease(
+        roomId!,
+        rent,
+        increaseFromMonth,
+        increaseFromYear,
+      );
       setIncreaseModalOpen(false);
-      toast.success(`Rent updated. ${result.updated_count} record(s) repriced.`);
+      toast.success(
+        `Rent updated. ${result.updated_count} record(s) repriced.`,
+      );
       loadData();
     } catch (e: any) {
       toast.error(e.message);
@@ -383,7 +405,11 @@ export default function RentEntryScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={24}
+            color={colors.text}
+          />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.headerTitle}>Flat Management</Text>
@@ -431,9 +457,7 @@ export default function RentEntryScreen() {
               </View>
             </View>
           ) : (
-            <Text style={styles.noTenant}>
-              No tenant assigned
-            </Text>
+            <Text style={styles.noTenant}>No tenant assigned</Text>
           )}
 
           {hasTenant && (
@@ -455,7 +479,13 @@ export default function RentEntryScreen() {
                       onChangeText={setAdvanceEdit}
                       onBlur={handleSaveAdvance}
                     />
-                    {savingAdvance && <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 4 }} />}
+                    {savingAdvance && (
+                      <ActivityIndicator
+                        size="small"
+                        color={colors.primary}
+                        style={{ marginLeft: 4 }}
+                      />
+                    )}
                   </View>
                 )}
               </View>
@@ -463,12 +493,22 @@ export default function RentEntryScreen() {
               {/* Vacating date */}
               {vacatingDate ? (
                 <View style={styles.vacatingBanner}>
-                  <MaterialCommunityIcons name="calendar-remove" size={15} color={colors.warning} />
+                  <MaterialCommunityIcons
+                    name="calendar-remove"
+                    size={15}
+                    color={colors.warning}
+                  />
                   <Text style={styles.vacatingBannerText}>
-                    Moving out: {shortDate(vacatingDate)} (set by {vacatingSetBy === "tenant" ? "Tenant" : "You"})
+                    Moving out: {shortDate(vacatingDate)} (set by{" "}
+                    {vacatingSetBy === "tenant" ? "Tenant" : "You"})
                   </Text>
-                  <TouchableOpacity onPress={handleClearVacatingDate} disabled={clearingVacating}>
-                    <Text style={styles.vacatingCancelLink}>{clearingVacating ? "…" : "Cancel"}</Text>
+                  <TouchableOpacity
+                    onPress={handleClearVacatingDate}
+                    disabled={clearingVacating}
+                  >
+                    <Text style={styles.vacatingCancelLink}>
+                      {clearingVacating ? "…" : "Cancel"}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -476,7 +516,11 @@ export default function RentEntryScreen() {
                   style={styles.setMoveoutBtn}
                   onPress={() => setShowVacatingPicker(true)}
                 >
-                  <MaterialCommunityIcons name="calendar-plus" size={14} color={colors.textSecondary} />
+                  <MaterialCommunityIcons
+                    name="calendar-plus"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.setMoveoutText}>Set move-out date</Text>
                 </TouchableOpacity>
               )}
@@ -511,21 +555,35 @@ export default function RentEntryScreen() {
         <View style={styles.card}>
           {/* Total payable header */}
           <Text style={styles.totalLabel}>TOTAL PAYABLE</Text>
-          <Text style={styles.totalAmount}>₹{recordTotal.toLocaleString("en-IN")}</Text>
+          <Text style={styles.totalAmount}>
+            ₹{recordTotal.toLocaleString("en-IN")}
+          </Text>
 
           {/* Paid / Remaining status cards */}
           {paidAmount > 0 && (
             <View style={styles.paidStatusCard}>
-              <MaterialCommunityIcons name="check-circle" size={18} color={colors.success} />
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={18}
+                color={colors.success}
+              />
               <Text style={styles.paidStatusLabel}>Paid Amount</Text>
-              <Text style={styles.paidStatusValue}>₹{paidAmount.toLocaleString("en-IN")}</Text>
+              <Text style={styles.paidStatusValue}>
+                ₹{paidAmount.toLocaleString("en-IN")}
+              </Text>
             </View>
           )}
           {isPartial && (
             <View style={styles.dueStatusCard}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={18} color={colors.danger} />
+              <MaterialCommunityIcons
+                name="alert-circle-outline"
+                size={18}
+                color={colors.danger}
+              />
               <Text style={styles.dueStatusLabel}>Remaining Due</Text>
-              <Text style={styles.dueStatusValue}>+₹{(recordTotal - paidAmount).toLocaleString("en-IN")}</Text>
+              <Text style={styles.dueStatusValue}>
+                +₹{(recordTotal - paidAmount).toLocaleString("en-IN")}
+              </Text>
             </View>
           )}
 
@@ -534,8 +592,17 @@ export default function RentEntryScreen() {
 
           {/* Base Rent item */}
           <View style={styles.breakdownItem}>
-            <View style={[styles.itemIconCircle, { backgroundColor: colors.primaryLight }]}>
-              <MaterialCommunityIcons name="home" size={16} color={colors.primary} />
+            <View
+              style={[
+                styles.itemIconCircle,
+                { backgroundColor: colors.primaryLight },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="home"
+                size={16}
+                color={colors.primary}
+              />
             </View>
             <Text style={styles.itemLabel}>Base Rent</Text>
             <View style={styles.itemRight}>
@@ -551,14 +618,27 @@ export default function RentEntryScreen() {
                   underlineColorAndroid="transparent"
                 />
               </View>
-              <MaterialCommunityIcons name="pencil" size={14} color={colors.primary} />
+              <MaterialCommunityIcons
+                name="pencil"
+                size={14}
+                color={colors.primary}
+              />
             </View>
           </View>
 
           {/* Electricity item */}
           <View style={styles.breakdownItem}>
-            <View style={[styles.itemIconCircle, { backgroundColor: colors.successBg }]}>
-              <MaterialCommunityIcons name="flash" size={16} color={colors.success} />
+            <View
+              style={[
+                styles.itemIconCircle,
+                { backgroundColor: colors.successBg },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="flash"
+                size={16}
+                color={colors.success}
+              />
             </View>
             <Text style={styles.itemLabel}>Electricity</Text>
             <View style={styles.itemRight}>
@@ -574,7 +654,11 @@ export default function RentEntryScreen() {
                   underlineColorAndroid="transparent"
                 />
               </View>
-              <MaterialCommunityIcons name="pencil" size={14} color={colors.primary} />
+              <MaterialCommunityIcons
+                name="pencil"
+                size={14}
+                color={colors.primary}
+              />
             </View>
           </View>
 
@@ -589,7 +673,12 @@ export default function RentEntryScreen() {
               <Text style={styles.cfBannerLabel}>
                 {cf > 0 ? "Carried from prev month" : "Credit from prev month"}
               </Text>
-              <Text style={[styles.cfBannerValue, { color: cf > 0 ? colors.danger : colors.success }]}>
+              <Text
+                style={[
+                  styles.cfBannerValue,
+                  { color: cf > 0 ? colors.danger : colors.success },
+                ]}
+              >
                 {cf > 0 ? "+" : "−"}₹{Math.abs(cf).toLocaleString("en-IN")}
               </Text>
             </View>
@@ -599,8 +688,14 @@ export default function RentEntryScreen() {
             style={styles.updateRentLink}
             onPress={() => setIncreaseModalOpen(true)}
           >
-            <MaterialCommunityIcons name="pencil-outline" size={14} color={colors.textSecondary} />
-            <Text style={styles.updateRentLinkText}>Update base rent from month</Text>
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={14}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.updateRentLinkText}>
+              Update base rent from month
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -621,14 +716,22 @@ export default function RentEntryScreen() {
         {/* Payment section — always visible so payments can be recorded or corrected */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
-            {isPaid ? "Update Payment" : isPartial ? "Record Payment" : "Record Payment"}
+            {isPaid
+              ? "Update Payment"
+              : isPartial
+                ? "Record Payment"
+                : "Record Payment"}
           </Text>
           <Text style={styles.fieldLabel}>Payment Date</Text>
           <TouchableOpacity
             style={styles.datePickerBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <MaterialCommunityIcons name="calendar" size={18} color={colors.primary} />
+            <MaterialCommunityIcons
+              name="calendar"
+              size={18}
+              color={colors.primary}
+            />
             <Text style={styles.datePickerText}>{paidDate.toDateString()}</Text>
           </TouchableOpacity>
 
@@ -646,16 +749,30 @@ export default function RentEntryScreen() {
           )}
 
           {/* Payment method selector */}
-          <Text style={[styles.fieldLabel, { marginBottom: 8 }]}>How was it paid?</Text>
+          <Text style={[styles.fieldLabel, { marginBottom: 8 }]}>
+            How was it paid?
+          </Text>
           <View style={styles.methodRow}>
             {(["Bank", "Cash", "UPI"] as const).map((m) => (
               <TouchableOpacity
                 key={m}
-                style={[styles.methodBtn, paymentMethod === m && styles.methodBtnActive]}
+                style={[
+                  styles.methodBtn,
+                  paymentMethod === m && styles.methodBtnActive,
+                ]}
                 onPress={() => setPaymentMethod(paymentMethod === m ? null : m)}
               >
-                <Text style={[styles.methodBtnText, paymentMethod === m && styles.methodBtnTextActive]}>
-                  {m === "Bank" ? "🏦 Bank" : m === "Cash" ? "💵 Cash" : "📱 UPI"}
+                <Text
+                  style={[
+                    styles.methodBtnText,
+                    paymentMethod === m && styles.methodBtnTextActive,
+                  ]}
+                >
+                  {m === "Bank"
+                    ? "🏦 Bank"
+                    : m === "Cash"
+                      ? "💵 Cash"
+                      : "📱 UPI"}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -663,7 +780,10 @@ export default function RentEntryScreen() {
 
           {advanceAmount > 0 && !advanceAdjusted && !isPaid && (
             <TouchableOpacity
-              style={[styles.applyAdvanceBtn, applyingAdvance && { opacity: 0.6 }]}
+              style={[
+                styles.applyAdvanceBtn,
+                applyingAdvance && { opacity: 0.6 },
+              ]}
               onPress={() => setApplyAdvanceDialogOpen(true)}
               disabled={applyingAdvance}
             >
@@ -671,7 +791,11 @@ export default function RentEntryScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <MaterialCommunityIcons name="bank-transfer" size={18} color="#fff" />
+                  <MaterialCommunityIcons
+                    name="bank-transfer"
+                    size={18}
+                    color="#fff"
+                  />
                   <Text style={styles.applyAdvanceBtnText}>
                     Apply Advance (₹{advanceAmount.toLocaleString("en-IN")})
                   </Text>
@@ -681,7 +805,11 @@ export default function RentEntryScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.paidBtn, isPaid && styles.paidBtnUpdate, markingPaid && { opacity: 0.6 }]}
+            style={[
+              styles.paidBtn,
+              isPaid && styles.paidBtnUpdate,
+              markingPaid && { opacity: 0.6 },
+            ]}
             onPress={openPayDialog}
             disabled={markingPaid}
           >
@@ -716,9 +844,14 @@ export default function RentEntryScreen() {
         {/* No-record banner for past months */}
         {isPastMonth && !rentResult?.rent_record && (
           <View style={styles.noRecordBanner}>
-            <MaterialCommunityIcons name="information-outline" size={18} color={colors.textSecondary} />
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={18}
+              color={colors.textSecondary}
+            />
             <Text style={styles.noRecordText}>
-              No record exists for {MONTHS[month - 1]} {year}. Fill in the details above and tap Save to create one.
+              No record exists for {MONTHS[month - 1]} {year}. Fill in the
+              details above and tap Save to create one.
             </Text>
           </View>
         )}
@@ -741,8 +874,14 @@ export default function RentEntryScreen() {
             style={styles.removeTenantLink}
             onPress={() => setRemoveDialogOpen(true)}
           >
-            <MaterialCommunityIcons name="account-remove-outline" size={15} color={colors.textMuted} />
-            <Text style={styles.removeTenantLinkText}>Remove tenant from this flat</Text>
+            <MaterialCommunityIcons
+              name="account-remove-outline"
+              size={15}
+              color={colors.textMuted}
+            />
+            <Text style={styles.removeTenantLinkText}>
+              Remove tenant from this flat
+            </Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -764,7 +903,11 @@ export default function RentEntryScreen() {
                 setSearchError("");
               }}
             >
-              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text}
+              />
             </TouchableOpacity>
           </View>
 
@@ -877,11 +1020,21 @@ export default function RentEntryScreen() {
           {/* "Replaces, not adds" warning — shown only when correcting */}
           {paidAmount > 0 && (
             <View style={styles.payWarn}>
-              <MaterialCommunityIcons name="information-outline" size={15} color={colors.warningText} style={{ marginTop: 1 }} />
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={15}
+                color={colors.warningText}
+                style={{ marginTop: 1 }}
+              />
               <Text style={styles.payWarnText}>
-                This <Text style={{ fontWeight: "700" }}>replaces</Text> the previously recorded{" "}
-                <Text style={{ fontWeight: "700" }}>₹{paidAmount.toLocaleString("en-IN")}</Text> — it does not add to it.
-                Enter the <Text style={{ fontWeight: "700" }}>total</Text> received so far.
+                This <Text style={{ fontWeight: "700" }}>replaces</Text> the
+                previously recorded{" "}
+                <Text style={{ fontWeight: "700" }}>
+                  ₹{paidAmount.toLocaleString("en-IN")}
+                </Text>{" "}
+                — it does not add to it. Enter the{" "}
+                <Text style={{ fontWeight: "700" }}>total</Text> received so
+                far.
               </Text>
             </View>
           )}
@@ -889,7 +1042,9 @@ export default function RentEntryScreen() {
           {/* Total due reference row */}
           <View style={styles.payMeta}>
             <Text style={styles.payMetaLabel}>Total due</Text>
-            <Text style={styles.payMetaValue}>₹{recordTotal.toLocaleString("en-IN")}</Text>
+            <Text style={styles.payMetaValue}>
+              ₹{recordTotal.toLocaleString("en-IN")}
+            </Text>
           </View>
 
           {/* Amount input */}
@@ -913,9 +1068,10 @@ export default function RentEntryScreen() {
             if (diff >= 0) {
               icon = "check-circle-outline";
               color = colors.success;
-              msg = diff > 0
-                ? `Fully paid + ₹${diff.toLocaleString("en-IN")} credit rolls to next month`
-                : "Marks this month as fully paid";
+              msg =
+                diff > 0
+                  ? `Fully paid + ₹${diff.toLocaleString("en-IN")} credit rolls to next month`
+                  : "Marks this month as fully paid";
             } else {
               icon = "arrow-right-circle-outline";
               color = colors.warningAlt;
@@ -931,7 +1087,9 @@ export default function RentEntryScreen() {
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onPress={handleMarkPaid}>Confirm</AlertDialogAction>
+            <AlertDialogAction onPress={handleMarkPaid}>
+              Confirm
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -955,33 +1113,48 @@ export default function RentEntryScreen() {
       </AlertDialog>
 
       {/* ── Apply Advance Dialog ──────────────────────────────────────── */}
-      <AlertDialog open={applyAdvanceDialogOpen} onOpenChange={setApplyAdvanceDialogOpen}>
+      <AlertDialog
+        open={applyAdvanceDialogOpen}
+        onOpenChange={setApplyAdvanceDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Apply Security Deposit</AlertDialogTitle>
             <AlertDialogDescription>
-              Apply ₹{advanceAmount.toLocaleString("en-IN")} advance toward this month's rent? This cannot be undone.
+              Apply ₹{advanceAmount.toLocaleString("en-IN")} advance toward this
+              month's rent? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onPress={handleApplyAdvance}>Apply</AlertDialogAction>
+            <AlertDialogAction onPress={handleApplyAdvance}>
+              Apply
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* ── Rent Increase Modal ───────────────────────────────────────── */}
-      <Modal visible={increaseModalOpen} animationType="slide" presentationStyle="pageSheet">
+      <Modal
+        visible={increaseModalOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Update Base Rent</Text>
             <TouchableOpacity onPress={() => setIncreaseModalOpen(false)}>
-              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.modalBody}>
             <Text style={styles.modalHint}>
-              Update the base rent for this flat. Changes apply to all unpaid records from the selected month onwards.
+              Update the base rent for this flat. Changes apply to all unpaid
+              records from the selected month onwards.
             </Text>
             <Text style={styles.fieldLabel}>New Base Rent (₹)</Text>
             <TextInput
@@ -992,18 +1165,31 @@ export default function RentEntryScreen() {
               value={newBaseRent}
               onChangeText={setNewBaseRent}
             />
-            <Text style={[styles.fieldLabel, { marginTop: 14 }]}>Effective From Month</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 14 }]}>
+              Effective From Month
+            </Text>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>Month</Text>
-                <View style={[styles.input, { justifyContent: "center", padding: 0 }]}>
+                <View
+                  style={[
+                    styles.input,
+                    { justifyContent: "center", padding: 0 },
+                  ]}
+                >
                   <TextInput
-                    style={{ paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.inputText }}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 16,
+                      color: colors.inputText,
+                    }}
                     keyboardType="numeric"
                     value={String(increaseFromMonth)}
                     onChangeText={(v) => {
                       const n = parseInt(v);
-                      if (!isNaN(n) && n >= 1 && n <= 12) setIncreaseFromMonth(n);
+                      if (!isNaN(n) && n >= 1 && n <= 12)
+                        setIncreaseFromMonth(n);
                     }}
                     placeholder="1–12"
                     placeholderTextColor={colors.inputPlaceholder}
@@ -1012,9 +1198,19 @@ export default function RentEntryScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>Year</Text>
-                <View style={[styles.input, { justifyContent: "center", padding: 0 }]}>
+                <View
+                  style={[
+                    styles.input,
+                    { justifyContent: "center", padding: 0 },
+                  ]}
+                >
                   <TextInput
-                    style={{ paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.inputText }}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 16,
+                      color: colors.inputText,
+                    }}
                     keyboardType="numeric"
                     value={String(increaseFromYear)}
                     onChangeText={(v) => {
@@ -1028,9 +1224,16 @@ export default function RentEntryScreen() {
               </View>
             </View>
             <View style={styles.payWarn}>
-              <MaterialCommunityIcons name="information-outline" size={15} color={colors.warningText} style={{ marginTop: 1 }} />
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={15}
+                color={colors.warningText}
+                style={{ marginTop: 1 }}
+              />
               <Text style={styles.payWarnText}>
-                Paid records will not be changed. Only pending/partial records from {MONTHS[increaseFromMonth - 1]} {increaseFromYear} onwards will be updated.
+                Paid records will not be changed. Only pending/partial records
+                from {MONTHS[increaseFromMonth - 1]} {increaseFromYear} onwards
+                will be updated.
               </Text>
             </View>
             <TouchableOpacity
@@ -1051,451 +1254,475 @@ export default function RentEntryScreen() {
   );
 }
 
-const createStyles = (c: AppColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: c.background },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: c.text },
-  headerSub: { fontSize: 12, color: c.textSecondary },
-  paidBadge: {
-    backgroundColor: c.successBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  paidBadgeText: { fontSize: 12, fontWeight: "700", color: c.success },
-  partialBadge: {
-    backgroundColor: c.warningBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  partialBadgeText: { fontSize: 12, fontWeight: "700", color: c.warning },
-  content: { padding: 16, gap: 14, paddingBottom: 40 },
-  addTenantBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: c.primary,
-    borderRadius: 10,
-    padding: 14,
-    gap: 8,
-  },
-  addTenantText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  removeTenantLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 16,
-    marginTop: 4,
-  },
-  removeTenantLinkText: { fontSize: 13, color: c.textMuted },
-  card: {
-    backgroundColor: c.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: c.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  cardTitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: c.textMuted,
-    letterSpacing: 1,
-    marginBottom: 14,
-    textTransform: "uppercase",
-  },
-  tenantRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 14,
-  },
-  tenantName: { fontSize: 15, color: c.text, fontWeight: "700" },
-  tenantBadge: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: c.success,
-    marginTop: 1,
-  },
-  noTenant: { color: c.textMuted, fontSize: 14, marginBottom: 14 },
-  // ── Total payable header ──
-  totalLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: c.textMuted,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  totalAmount: {
-    fontSize: 34,
-    fontWeight: "800",
-    color: c.text,
-    marginBottom: 14,
-  },
-  // ── Payment status cards ──
-  paidStatusCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: c.successBg,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: c.successBorder,
-  },
-  paidStatusLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: c.success },
-  paidStatusValue: { fontSize: 15, fontWeight: "700", color: c.success },
-  dueStatusCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: c.dangerBg,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: c.dangerBorder,
-  },
-  dueStatusLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: c.danger },
-  dueStatusValue: { fontSize: 15, fontWeight: "700", color: c.danger },
-  // ── Breakdown section ──
-  breakdownSectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: c.textMuted,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginTop: 8,
-    marginBottom: 10,
-  },
-  breakdownItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: c.surfaceAlt,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: c.borderLight,
-  },
-  itemIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  itemLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: c.text },
-  itemRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flexShrink: 0,
-  },
-  itemInputBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: c.inputBg,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  itemRupee: { fontSize: 13, color: c.textSecondary, marginRight: 2 },
-  itemInput: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: c.inputText,
-    width: 80,
-    textAlign: "right",
-    paddingVertical: 6,
-    // @ts-ignore - web only, silently ignored on native
-    outline: "none",
-  },
-  // ── CF banner ──
-  cfBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderTopWidth: 1,
-    borderTopColor: c.borderLight,
-    marginTop: 2,
-  },
-  cfBannerLabel: { flex: 1, fontSize: 13, color: c.textSecondary },
-  cfBannerValue: { fontSize: 14, fontWeight: "700" },
-  methodRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 14,
-  },
-  methodBtn: {
-    flex: 1,
-    paddingVertical: 9,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: c.border,
-    alignItems: "center",
-    backgroundColor: c.surface,
-  },
-  methodBtnActive: { borderColor: c.primary, backgroundColor: c.primaryLight },
-  methodBtnText: { fontSize: 12, fontWeight: "600", color: c.textSecondary },
-  methodBtnTextActive: { color: c.primary },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: c.textSecondary,
-    marginBottom: 6,
-  },
-  readonlyField: {
-    backgroundColor: c.surfaceAlt,
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  readonlyText: { color: c.textBody, fontSize: 15 },
-  input: {
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: c.inputText,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-  },
-  datePickerBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-    marginBottom: 14,
-  },
-  datePickerText: { fontSize: 15, color: c.textBody, fontWeight: "500" },
-  paidBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: c.success,
-    borderRadius: 10,
-    padding: 14,
-  },
-  paidBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  paidInfo: { fontSize: 15, color: c.success, fontWeight: "500" },
-  saveBtn: {
-    backgroundColor: c.primary,
-    borderRadius: 10,
-    padding: 16,
-    alignItems: "center",
-  },
-  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  // ── Modal styles ──
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: c.text },
-  modalBody: { padding: 20, gap: 16 },
-  modalHint: { fontSize: 14, color: c.textSecondary, lineHeight: 20 },
-  searchRow: { flexDirection: "row", gap: 10 },
-  searchBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: c.dangerBgAlt,
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: c.dangerBorder,
-  },
-  errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
-  tenantCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: c.successBg,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: c.successBorder,
-  },
-  tenantCardAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tenantCardName: { fontSize: 15, fontWeight: "600", color: c.text },
-  tenantCardEmail: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
-  assignBtn: {
-    backgroundColor: c.primary,
-    borderRadius: 10,
-    padding: 16,
-    alignItems: "center",
-  },
-  assignBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  // ── Payment input inside dialog ──
-  payInput: {
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 18,
-    fontWeight: "600",
-    color: c.inputText,
-    borderWidth: 1,
-    borderColor: c.inputBorder,
-    marginTop: 16,
-    marginBottom: 4,
-  },
-  // ── Update payment button variant ──
-  paidBtnUpdate: { backgroundColor: c.blueAlt },
-  // ── Payment dialog extras ──
-  payWarn: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    backgroundColor: c.warningBg,
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: c.warningBorder,
-    marginBottom: 12,
-  },
-  payWarnText: { flex: 1, fontSize: 13, color: c.warningText, lineHeight: 18 },
-  payMeta: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  payMetaLabel: { fontSize: 13, color: c.textSecondary },
-  payMetaValue: { fontSize: 14, fontWeight: "700", color: c.textBody },
-  payPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  payPreviewText: { fontSize: 13, fontWeight: "600" },
-  // ── Deposit row ──
-  depositRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  depositLabel: { fontSize: 13, color: c.textSecondary, fontWeight: "500" },
-  appliedBadge: {
-    backgroundColor: c.surfaceAlt,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  appliedBadgeText: { fontSize: 12, color: c.textMuted, fontWeight: "600" },
-  depositEditRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  depositRupee: { fontSize: 15, color: c.textBody },
-  depositInput: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: c.text,
-    minWidth: 80,
-    textAlign: "right",
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-    paddingVertical: 2,
-  },
-  // ── Vacating date ──
-  vacatingBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: c.warningBg,
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: c.warningBorder,
-    marginBottom: 12,
-  },
-  vacatingBannerText: { flex: 1, fontSize: 13, color: c.warningText },
-  vacatingCancelLink: { fontSize: 13, color: c.primary, fontWeight: "600" },
-  setMoveoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 12,
-  },
-  setMoveoutText: { fontSize: 13, color: c.textSecondary },
-  // ── Update rent link ──
-  updateRentLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 12,
-  },
-  updateRentLinkText: { fontSize: 13, color: c.textSecondary },
-  // ── Apply advance button ──
-  applyAdvanceBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: c.warningAlt,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 12,
-  },
-  applyAdvanceBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  // ── No record banner ──
-  noRecordBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    backgroundColor: c.inputBg,
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  noRecordText: { flex: 1, fontSize: 13, color: c.textSecondary, lineHeight: 19 },
-});
+const createStyles = (c: AppColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: c.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerTitle: { fontSize: 18, fontWeight: "700", color: c.text },
+    headerSub: { fontSize: 12, color: c.textSecondary },
+    paidBadge: {
+      backgroundColor: c.successBg,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    paidBadgeText: { fontSize: 12, fontWeight: "700", color: c.success },
+    partialBadge: {
+      backgroundColor: c.warningBg,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    partialBadgeText: { fontSize: 12, fontWeight: "700", color: c.warning },
+    content: { padding: 16, gap: 14, paddingBottom: 40 },
+    addTenantBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primary,
+      borderRadius: 10,
+      padding: 14,
+      gap: 8,
+    },
+    addTenantText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+    removeTenantLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      paddingVertical: 16,
+      marginTop: 4,
+    },
+    removeTenantLinkText: { fontSize: 13, color: c.textMuted },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 1,
+    },
+    cardTitle: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: c.textMuted,
+      letterSpacing: 1,
+      marginBottom: 14,
+      textTransform: "uppercase",
+    },
+    tenantRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 14,
+    },
+    tenantName: { fontSize: 15, color: c.text, fontWeight: "700" },
+    tenantBadge: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: c.success,
+      marginTop: 1,
+    },
+    noTenant: { color: c.textMuted, fontSize: 14, marginBottom: 14 },
+    // ── Total payable header ──
+    totalLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: c.textMuted,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      marginBottom: 4,
+    },
+    totalAmount: {
+      fontSize: 34,
+      fontWeight: "800",
+      color: c.text,
+      marginBottom: 14,
+    },
+    // ── Payment status cards ──
+    paidStatusCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: c.successBg,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: c.successBorder,
+    },
+    paidStatusLabel: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
+      color: c.success,
+    },
+    paidStatusValue: { fontSize: 15, fontWeight: "700", color: c.success },
+    dueStatusCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: c.dangerBg,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+    },
+    dueStatusLabel: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
+      color: c.danger,
+    },
+    dueStatusValue: { fontSize: 15, fontWeight: "700", color: c.danger },
+    // ── Breakdown section ──
+    breakdownSectionLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: c.textMuted,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      marginTop: 8,
+      marginBottom: 10,
+    },
+    breakdownItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: c.borderLight,
+    },
+    itemIconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    itemLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: c.text },
+    itemRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      flexShrink: 0,
+    },
+    itemInputBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.inputBg,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    itemRupee: { fontSize: 13, color: c.textSecondary, marginRight: 2 },
+    itemInput: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: c.inputText,
+      width: 80,
+      textAlign: "right",
+      paddingVertical: 6,
+      // @ts-ignore - web only, silently ignored on native
+      outline: "none",
+    },
+    // ── CF banner ──
+    cfBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderTopWidth: 1,
+      borderTopColor: c.borderLight,
+      marginTop: 2,
+    },
+    cfBannerLabel: { flex: 1, fontSize: 13, color: c.textSecondary },
+    cfBannerValue: { fontSize: 14, fontWeight: "700" },
+    methodRow: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 14,
+    },
+    methodBtn: {
+      flex: 1,
+      paddingVertical: 9,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      alignItems: "center",
+      backgroundColor: c.surface,
+    },
+    methodBtnActive: {
+      borderColor: c.primary,
+      backgroundColor: c.primaryLight,
+    },
+    methodBtnText: { fontSize: 12, fontWeight: "600", color: c.textSecondary },
+    methodBtnTextActive: { color: c.primary },
+    fieldLabel: {
+      fontSize: 13,
+      fontWeight: "500",
+      color: c.textSecondary,
+      marginBottom: 6,
+    },
+    readonlyField: {
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 8,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    readonlyText: { color: c.textBody, fontSize: 15 },
+    input: {
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: c.inputText,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+    },
+    datePickerBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+      marginBottom: 14,
+    },
+    datePickerText: { fontSize: 15, color: c.textBody, fontWeight: "500" },
+    paidBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: c.success,
+      borderRadius: 10,
+      padding: 14,
+    },
+    paidBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+    paidInfo: { fontSize: 15, color: c.success, fontWeight: "500" },
+    saveBtn: {
+      backgroundColor: c.primary,
+      borderRadius: 10,
+      padding: 16,
+      alignItems: "center",
+    },
+    saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    // ── Modal styles ──
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    modalTitle: { fontSize: 20, fontWeight: "700", color: c.text },
+    modalBody: { padding: 20, gap: 16 },
+    modalHint: { fontSize: 14, color: c.textSecondary, lineHeight: 20 },
+    searchRow: { flexDirection: "row", gap: 10 },
+    searchBtn: {
+      width: 48,
+      height: 48,
+      borderRadius: 10,
+      backgroundColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    errorBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: c.dangerBgAlt,
+      borderRadius: 8,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+    },
+    errorText: { color: c.danger, fontSize: 14, fontWeight: "500" },
+    tenantCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: c.successBg,
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: c.successBorder,
+    },
+    tenantCardAvatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tenantCardName: { fontSize: 15, fontWeight: "600", color: c.text },
+    tenantCardEmail: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
+    assignBtn: {
+      backgroundColor: c.primary,
+      borderRadius: 10,
+      padding: 16,
+      alignItems: "center",
+    },
+    assignBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+    // ── Payment input inside dialog ──
+    payInput: {
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 18,
+      fontWeight: "600",
+      color: c.inputText,
+      borderWidth: 1,
+      borderColor: c.inputBorder,
+      marginTop: 16,
+      marginBottom: 4,
+    },
+    // ── Update payment button variant ──
+    paidBtnUpdate: { backgroundColor: c.blueAlt },
+    // ── Payment dialog extras ──
+    payWarn: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+      backgroundColor: c.warningBg,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: c.warningBorder,
+      marginBottom: 12,
+    },
+    payWarnText: {
+      flex: 1,
+      fontSize: 13,
+      color: c.warningText,
+      lineHeight: 18,
+    },
+    payMeta: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    payMetaLabel: { fontSize: 13, color: c.textSecondary },
+    payMetaValue: { fontSize: 14, fontWeight: "700", color: c.textBody },
+    payPreview: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    payPreviewText: { fontSize: 13, fontWeight: "600" },
+    // ── Deposit row ──
+    depositRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    depositLabel: { fontSize: 13, color: c.textSecondary, fontWeight: "500" },
+    appliedBadge: {
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    appliedBadgeText: { fontSize: 12, color: c.textMuted, fontWeight: "600" },
+    depositEditRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+    depositRupee: { fontSize: 15, color: c.textBody },
+    depositInput: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: c.text,
+      minWidth: 80,
+      textAlign: "right",
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      paddingVertical: 2,
+    },
+    // ── Vacating date ──
+    vacatingBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: c.warningBg,
+      borderRadius: 8,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: c.warningBorder,
+      marginBottom: 12,
+    },
+    vacatingBannerText: { flex: 1, fontSize: 13, color: c.warningText },
+    vacatingCancelLink: { fontSize: 13, color: c.primary, fontWeight: "600" },
+    setMoveoutBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 12,
+    },
+    setMoveoutText: { fontSize: 13, color: c.textSecondary },
+    // ── Update rent link ──
+    updateRentLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 12,
+    },
+    updateRentLinkText: { fontSize: 13, color: c.textSecondary },
+    // ── Apply advance button ──
+    applyAdvanceBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: c.warningAlt,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 12,
+    },
+    applyAdvanceBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+    // ── No record banner ──
+    noRecordBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      backgroundColor: c.inputBg,
+      borderRadius: 10,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    noRecordText: {
+      flex: 1,
+      fontSize: 13,
+      color: c.textSecondary,
+      lineHeight: 19,
+    },
+  });
